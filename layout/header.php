@@ -59,6 +59,11 @@ if ($user) {
                 <div class="brand-subtitle">Patient Management System</div>
             </div>
         </div>
+        <?php if ($user): ?>
+            <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        <?php endif; ?>
         <nav class="main-nav">
             <?php if ($user): ?>
                 <?php foreach ($menu as $label => $path): ?>
@@ -83,5 +88,18 @@ if ($user) {
         <?php endif; ?>
     </div>
 </header>
+<?php if ($user): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var toggle = document.querySelector('.nav-toggle');
+    var nav = document.querySelector('.main-nav');
+    if (!toggle || !nav) return;
+    toggle.addEventListener('click', function () {
+        var open = nav.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+});
+</script>
+<?php endif; ?>
 <main class="page">
     <div class="container">

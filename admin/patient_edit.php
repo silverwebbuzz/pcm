@@ -9,7 +9,7 @@ $stmt = db()->prepare('SELECT * FROM patients WHERE id = ?');
 $stmt->execute([$id]);
 $patient = $stmt->fetch();
 if (!$patient) {
-    redirect('patients.php');
+    redirect('admin/patients.php');
 }
 
 $user = null;

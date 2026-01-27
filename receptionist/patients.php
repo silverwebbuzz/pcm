@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             current_user()['id']
         ]);
     }
-    redirect('patients.php');
+    redirect('receptionist/patients.php');
 }
 
 $patients = $pdo->query('SELECT id, first_name, last_name, phone FROM patients ORDER BY created_at DESC')->fetchAll();
