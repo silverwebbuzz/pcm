@@ -21,7 +21,12 @@ $statsWeekStmt = $pdo->prepare('SELECT COUNT(*) FROM sessions WHERE session_date
 $statsWeekStmt->execute([current_date()]);
 $statsWeek = (int) $statsWeekStmt->fetchColumn();
 
-$conditions = $pdo->query("SELECT DISTINCT diagnosis FROM patients WHERE diagnosis <> '' ORDER BY diagnosis ASC LIMIT 30")->fetchAll();
+$conditions = [];
+try {
+    $conditions = $pdo->query("SELECT DISTINCT diagnosis FROM patients WHERE diagnosis <> '' ORDER BY diagnosis ASC LIMIT 30")->fetchAll();
+} catch (Exception $e) {
+    $conditions = [];
+}
 
 $queryBase = '
     SELECT p.*, tp.status AS plan_status
@@ -61,18 +66,31 @@ if ($status !== '' && isset($statusMap[$status])) {
     $queryBase .= $statusMap[$status];
 }
 
-$countStmt = $pdo->prepare('SELECT COUNT(*) FROM (' . $queryBase . ') AS count_table');
-$countStmt->execute($params);
-$totalRows = (int) $countStmt->fetchColumn();
-$totalPages = max(1, (int) ceil($totalRows / $perPage));
-$page = min($page, $totalPages);
-$offset = ($page - 1) * $perPage;
+$error = '';
+try {
+    $countStmt = $pdo->prepare('SELECT COUNT(*) FROM (' . $queryBase . ') AS count_table');
+    $countStmt->execute($params);
+    $totalRows = (int) $countStmt->fetchColumn();
+    $totalPages = max(1, (int) ceil($totalRows / $perPage));
+    $page = min($page, $totalPages);
+    $offset = ($page - 1) * $perPage;
 
-$query = $queryBase . ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
-$stmt = $pdo->prepare($query);
-$paramsWithPaging = array_merge($params, [$perPage, $offset]);
-$stmt->execute($paramsWithPaging);
-$patients = $stmt->fetchAll();
+    $query = $queryBase . ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
+    $stmt = $pdo->prepare($query);
+    foreach ($params as $index => $value) {
+        $stmt->bindValue($index + 1, $value);
+    }
+    $stmt->bindValue(count($params) + 1, (int) $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(count($params) + 2, (int) $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $patients = $stmt->fetchAll();
+} catch (Exception $e) {
+    $error = 'Unable to load patients. Please ensure the latest database schema is imported.';
+    $patients = [];
+    $totalRows = 0;
+    $totalPages = 1;
+    $offset = 0;
+}
 
 $from = $totalRows ? ($offset + 1) : 0;
 $to = min($offset + $perPage, $totalRows);
@@ -161,6 +179,10 @@ require __DIR__ . '/../layout/header.php';
         <a class="btn" href="patient_add.php">Add New Patient</a>
     </div>
 </form>
+
+<?php if ($error): ?>
+    <div class="error"><?php echo e($error); ?></div>
+<?php endif; ?>
 
 <div class="table-wrap">
 <table>
