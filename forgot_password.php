@@ -33,20 +33,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require __DIR__ . '/layout/header.php';
 ?>
-<h2>Forgot Password</h2>
-<?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
-<form method="post">
-    <label>Email
-        <input type="email" name="email" value="<?php echo e($email); ?>" required>
-    </label>
-    <?php if ($step === 2): ?>
-        <label>Security Question
-            <input type="text" value="<?php echo e($question); ?>" disabled>
-        </label>
-        <label>Answer
-            <input type="text" name="answer" required>
-        </label>
-    <?php endif; ?>
-    <button class="btn" type="submit"><?php echo $step === 2 ? 'Verify' : 'Next'; ?></button>
-</form>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="page-header">
+            <div>
+                <h2>Forgot Password</h2>
+                <div class="page-subtitle">Verify your account to reset password</div>
+            </div>
+        </div>
+        <?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
+        <form method="post">
+            <label>Email
+                <input type="email" name="email" value="<?php echo e($email); ?>" required>
+            </label>
+            <?php if ($step === 2): ?>
+                <label>Security Question
+                    <input type="text" value="<?php echo e($question); ?>" disabled>
+                </label>
+                <label>Answer
+                    <input type="text" name="answer" required>
+                </label>
+            <?php endif; ?>
+            <div class="form-actions">
+                <button class="btn" type="submit"><?php echo $step === 2 ? 'Verify' : 'Next'; ?></button>
+                <a class="btn ghost" href="login.php">Back to Login</a>
+            </div>
+        </form>
+    </div>
+</div>
 <?php require __DIR__ . '/layout/footer.php'; ?>

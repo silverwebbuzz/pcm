@@ -28,19 +28,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require __DIR__ . '/layout/header.php';
 ?>
-<h2>Change Password</h2>
-<?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
-<?php if ($success): ?><div class="success"><?php echo e($success); ?></div><?php endif; ?>
-<form method="post">
-    <label>Current Password
-        <input type="password" name="current_password" required>
-    </label>
-    <label>New Password
-        <input type="password" name="password" required>
-    </label>
-    <label>Confirm Password
-        <input type="password" name="confirm_password" required>
-    </label>
-    <button class="btn" type="submit">Update</button>
-</form>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="page-header">
+            <div>
+                <h2>Change Password</h2>
+                <div class="page-subtitle">Update your account password</div>
+            </div>
+        </div>
+        <?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
+        <?php if ($success): ?><div class="success"><?php echo e($success); ?></div><?php endif; ?>
+        <form method="post">
+            <label>Current Password
+                <input type="password" name="current_password" required>
+            </label>
+            <label>New Password
+                <input type="password" name="password" required>
+            </label>
+            <label>Confirm Password
+                <input type="password" name="confirm_password" required>
+            </label>
+            <div class="form-actions">
+                <button class="btn" type="submit">Update</button>
+                <a class="btn ghost" href="dashboard.php">Back</a>
+            </div>
+        </form>
+    </div>
+</div>
 <?php require __DIR__ . '/layout/footer.php'; ?>
