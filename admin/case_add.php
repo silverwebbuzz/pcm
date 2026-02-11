@@ -131,7 +131,7 @@ $visitDefault = date('Y-m-d\TH:i');
 <form method="post">
     <div class="section-card">
         <div class="section-title"><h3>Patient &amp; Visit</h3></div>
-        <div class="grid">
+        <div class="grid form-grid">
             <div class="field">
                 <label class="field-label">Patient</label>
                 <div class="select-box">
@@ -158,7 +158,7 @@ $visitDefault = date('Y-m-d\TH:i');
 
     <div class="section-card">
         <div class="section-title"><h3>Complaint</h3></div>
-        <div class="grid">
+        <div class="grid form-grid">
             <div class="field">
                 <label class="field-label">Whole Pain Areas</label>
                 <div class="multi-select">
@@ -197,7 +197,7 @@ $visitDefault = date('Y-m-d\TH:i');
 
     <div class="section-card">
         <div class="section-title"><h3>Observation</h3></div>
-        <div class="grid">
+        <div class="grid form-grid">
             <label>Built of Patient
                 <textarea name="observation_built" rows="2"></textarea>
             </label>
@@ -221,7 +221,7 @@ $visitDefault = date('Y-m-d\TH:i');
 
     <div class="section-card">
         <div class="section-title"><h3>On Palpation</h3></div>
-        <div class="grid">
+        <div class="grid form-grid">
             <label>Tenderness
                 <textarea name="palpation_tenderness" rows="2"></textarea>
             </label>
@@ -243,7 +243,7 @@ $visitDefault = date('Y-m-d\TH:i');
 
     <div class="section-card">
         <div class="section-title"><h3>History</h3></div>
-        <div class="grid">
+        <div class="grid form-grid">
             <label>History of Present Illness
                 <textarea name="history_present_illness" rows="3"></textarea>
             </label>
@@ -264,7 +264,7 @@ $visitDefault = date('Y-m-d\TH:i');
 
     <div class="section-card">
         <div class="section-title"><h3>Pain Details</h3></div>
-        <div class="grid">
+        <div class="grid form-grid">
             <label>Pain Type
                 <input name="pain_type">
             </label>
@@ -291,7 +291,7 @@ $visitDefault = date('Y-m-d\TH:i');
 
     <div class="section-card">
         <div class="section-title"><h3>Examination</h3></div>
-        <div class="grid">
+        <div class="grid form-grid">
             <label>ROM
                 <textarea name="examination_rom" rows="3"></textarea>
             </label>
@@ -330,11 +330,15 @@ document.addEventListener('DOMContentLoaded', function () {
             var checked = patientSelect.querySelector('input[type="radio"]:checked');
             trigger.textContent = checked ? checked.parentElement.textContent.trim() : 'Select patient';
         };
-        trigger.addEventListener('click', function () {
-            panel.classList.toggle('open');
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            patientSelect.classList.toggle('open');
+        });
+        panel.addEventListener('click', function (e) {
+            e.stopPropagation();
         });
         document.addEventListener('click', function (e) {
-            if (!patientSelect.contains(e.target)) panel.classList.remove('open');
+            if (!patientSelect.contains(e.target)) patientSelect.classList.remove('open');
         });
         filter.addEventListener('input', function () {
             var term = filter.value.toLowerCase();
@@ -346,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function () {
         patientSelect.querySelectorAll('input[type="radio"]').forEach(function (input) {
             input.addEventListener('change', function () {
                 updateTrigger();
-                panel.classList.remove('open');
+                patientSelect.classList.remove('open');
             });
         });
         updateTrigger();
@@ -359,11 +363,15 @@ document.addEventListener('DOMContentLoaded', function () {
     var search = multi.querySelector('.multi-search');
     var selectedWrap = document.querySelector('.multi-selected');
 
-    multiTrigger.addEventListener('click', function () {
-        panel.classList.toggle('open');
+    multiTrigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        multi.classList.toggle('open');
+    });
+    panel.addEventListener('click', function (e) {
+        e.stopPropagation();
     });
     document.addEventListener('click', function (e) {
-        if (!multi.contains(e.target)) panel.classList.remove('open');
+        if (!multi.contains(e.target)) multi.classList.remove('open');
     });
 
     function renderSelected() {
