@@ -169,13 +169,17 @@ require __DIR__ . '/../layout/header.php';
         </tr>
         </thead>
         <tbody>
-        <?php foreach ($plans as $plan): ?>
-            <tr>
-                <td><?php echo e($plan['plan_name']); ?></td>
-                <td><?php echo e($plan['total_sessions']); ?></td>
-                <td><?php echo e($plan['status']); ?></td>
-            </tr>
-        <?php endforeach; ?>
+        <?php if (!$plans): ?>
+            <tr><td colspan="3">No treatment plans found for this case.</td></tr>
+        <?php else: ?>
+            <?php foreach ($plans as $plan): ?>
+                <tr>
+                    <td><?php echo e($plan['plan_name']); ?></td>
+                    <td><?php echo e($plan['total_sessions']); ?></td>
+                    <td><?php echo e($plan['status']); ?></td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
         </tbody>
     </table>
     <a class="btn" href="treatment_plans.php?patient_id=<?php echo $case['patient_id']; ?>&case_id=<?php echo $caseId; ?>">Manage Plans</a>
@@ -194,13 +198,17 @@ require __DIR__ . '/../layout/header.php';
         </tr>
         </thead>
         <tbody>
-        <?php foreach ($sessions as $session): ?>
-            <tr>
-                <td><?php echo e($session['session_date']); ?></td>
-                <td><?php echo e($session['notes']); ?></td>
-                <td><?php echo e($session['status']); ?></td>
-            </tr>
-        <?php endforeach; ?>
+        <?php if (!$sessions): ?>
+            <tr><td colspan="3">No sessions recorded for this case.</td></tr>
+        <?php else: ?>
+            <?php foreach ($sessions as $session): ?>
+                <tr>
+                    <td><?php echo e($session['session_date']); ?></td>
+                    <td><?php echo e($session['notes']); ?></td>
+                    <td><?php echo e($session['status']); ?></td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
         </tbody>
     </table>
     <a class="btn" href="sessions.php?patient_id=<?php echo $case['patient_id']; ?>&case_id=<?php echo $caseId; ?>">Add Session</a>
@@ -220,14 +228,18 @@ require __DIR__ . '/../layout/header.php';
         </tr>
         </thead>
         <tbody>
-        <?php foreach ($payments as $payment): ?>
-            <tr>
-                <td><?php echo e($payment['payment_date']); ?></td>
-                <td><?php echo e($payment['amount']); ?></td>
-                <td><?php echo e($payment['method']); ?></td>
-                <td><?php echo e($payment['notes']); ?></td>
-            </tr>
-        <?php endforeach; ?>
+        <?php if (!$payments): ?>
+            <tr><td colspan="4">No payments recorded for this case.</td></tr>
+        <?php else: ?>
+            <?php foreach ($payments as $payment): ?>
+                <tr>
+                    <td><?php echo e($payment['payment_date']); ?></td>
+                    <td><?php echo e($payment['amount']); ?></td>
+                    <td><?php echo e($payment['method']); ?></td>
+                    <td><?php echo e($payment['notes']); ?></td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
         </tbody>
     </table>
     <a class="btn" href="payments.php?patient_id=<?php echo $case['patient_id']; ?>&case_id=<?php echo $caseId; ?>">Add Payment</a>
