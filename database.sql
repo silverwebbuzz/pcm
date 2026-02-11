@@ -63,34 +63,77 @@ CREATE TABLE patients (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE patient_visits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    visit_date DATE NOT NULL,
+    chief_complain TEXT,
+    history_present_illness TEXT,
+    past_medical_history TEXT,
+    surgical_history TEXT,
+    family_history TEXT,
+    socio_economic_status TEXT,
+    observation_built TEXT,
+    observation_attitude_limb TEXT,
+    observation_posture TEXT,
+    observation_deformity TEXT,
+    aids_applications TEXT,
+    gait TEXT,
+    palpation_tenderness TEXT,
+    palpation_oedema VARCHAR(50),
+    palpation_warmth TEXT,
+    palpation_crepitus TEXT,
+    examination_rom TEXT,
+    muscle_power TEXT,
+    muscle_bulk TEXT,
+    ligament_instability TEXT,
+    pain_type TEXT,
+    pain_site TEXT,
+    pain_nature TEXT,
+    pain_aggravating_factor TEXT,
+    pain_relieving_factor TEXT,
+    pain_measurement TINYINT NULL,
+    gait_assessment TEXT,
+    diagnosis TEXT,
+    treatment_goals TEXT,
+    created_by INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+);
+
 CREATE TABLE treatment_plans (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
+    visit_id INT NULL,
     total_sessions INT NOT NULL,
     start_date DATE,
     status VARCHAR(30) DEFAULT 'active',
     notes TEXT,
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (visit_id) REFERENCES patient_visits(id) ON DELETE SET NULL
 );
 
 CREATE TABLE sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     treatment_plan_id INT NOT NULL,
+    visit_id INT NULL,
     session_date DATE NOT NULL,
     attendance ENUM('attended','missed','cancelled') DEFAULT 'attended',
     notes TEXT,
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
-    FOREIGN KEY (treatment_plan_id) REFERENCES treatment_plans(id) ON DELETE CASCADE
+    FOREIGN KEY (treatment_plan_id) REFERENCES treatment_plans(id) ON DELETE CASCADE,
+    FOREIGN KEY (visit_id) REFERENCES patient_visits(id) ON DELETE SET NULL
 );
 
 CREATE TABLE payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
+    visit_id INT NULL,
     amount DECIMAL(10,2) NOT NULL,
     payment_date DATE NOT NULL,
     method VARCHAR(50),
@@ -98,7 +141,8 @@ CREATE TABLE payments (
     receipt_no VARCHAR(50),
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (visit_id) REFERENCES patient_visits(id) ON DELETE SET NULL
 );
 
 CREATE TABLE patient_documents (
@@ -132,9 +176,11 @@ CREATE TABLE pain_master (
 CREATE TABLE patient_pain (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
+    visit_id INT NOT NULL,
     pain_master_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (visit_id) REFERENCES patient_visits(id) ON DELETE CASCADE,
     FOREIGN KEY (pain_master_id) REFERENCES pain_master(id) ON DELETE CASCADE
 );
 

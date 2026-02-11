@@ -23,14 +23,24 @@ if ($patient['user_id']) {
 $error = '';
 $success = '';
 
-$painRows = $pdo->query("SELECT id, category, subcategory FROM pain_master WHERE active = 1 ORDER BY category, subcategory")->fetchAll();
 $painByCategory = [];
-foreach ($painRows as $row) {
-    $painByCategory[$row['category']][] = $row;
+$painRows = [];
+try {
+    $painRows = $pdo->query("SELECT id, category, subcategory FROM pain_master WHERE active = 1 ORDER BY category, subcategory")->fetchAll();
+    foreach ($painRows as $row) {
+        $painByCategory[$row['category']][] = $row;
+    }
+} catch (Exception $e) {
+    $painByCategory = [];
 }
-$selectedPainIds = $pdo->prepare('SELECT pain_master_id FROM patient_pain WHERE patient_id = ?');
-$selectedPainIds->execute([$id]);
-$selectedPainIds = array_map('intval', $selectedPainIds->fetchAll(PDO::FETCH_COLUMN));
+
+$latestVisitId = latest_visit_id($id);
+$selectedPainIds = [];
+if ($latestVisitId) {
+    $selectedPainIdsStmt = $pdo->prepare('SELECT pain_master_id FROM patient_pain WHERE patient_id = ? AND visit_id = ?');
+    $selectedPainIdsStmt->execute([$id, $latestVisitId]);
+    $selectedPainIds = array_map('intval', $selectedPainIdsStmt->fetchAll(PDO::FETCH_COLUMN));
+}
 $selectedCategories = [];
 foreach ($painRows as $row) {
     if (in_array((int) $row['id'], $selectedPainIds, true)) {
@@ -176,6 +186,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, pain_master_id) VALUES (?, ?)');
             foreach ($selectedPain as $painId) {
                 $stmt->execute([$id, (int) $painId]);
+            }
+        }
+
+        $createNewVisit = !empty($_POST['create_new_visit']);
+        $visitDate = $fields['assessment_date'] ?: current_date();
+
+        if ($createNewVisit || !$latestVisitId) {
+            $stmt = $pdo->prepare('
+                INSERT INTO patient_visits (
+                    patient_id, visit_date, chief_complain, history_present_illness, past_medical_history,
+                    surgical_history, family_history, socio_economic_status, observation_built, observation_attitude_limb,
+                    observation_posture, observation_deformity, aids_applications, gait, palpation_tenderness,
+                    palpation_oedema, palpation_warmth, palpation_crepitus, examination_rom, muscle_power, muscle_bulk,
+                    ligament_instability, pain_type, pain_site, pain_nature, pain_aggravating_factor, pain_relieving_factor,
+                    pain_measurement, gait_assessment, diagnosis, treatment_goals, created_by
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ');
+            $stmt->execute([
+                $id,
+                $visitDate,
+                $fields['chief_complain'],
+                $fields['history_present_illness'],
+                $fields['past_medical_history'],
+                $fields['surgical_history'],
+                $fields['family_history'],
+                $fields['socio_economic_status'],
+                $fields['observation_built'],
+                $fields['observation_attitude_limb'],
+                $fields['observation_posture'],
+                $fields['observation_deformity'],
+                $fields['aids_applications'],
+                $fields['gait'],
+                $fields['palpation_tenderness'],
+                $fields['palpation_oedema'],
+                $fields['palpation_warmth'],
+                $fields['palpation_crepitus'],
+                $fields['examination_rom'],
+                $fields['muscle_power'],
+                $fields['muscle_bulk'],
+                $fields['ligament_instability'],
+                $fields['pain_type'],
+                $fields['pain_site'],
+                $fields['pain_nature'],
+                $fields['pain_aggravating_factor'],
+                $fields['pain_relieving_factor'],
+                $fields['pain_measurement'],
+                $fields['gait_assessment'],
+                $fields['diagnosis'],
+                $fields['treatment_goals'],
+                current_user()['id'],
+            ]);
+            $latestVisitId = (int) $pdo->lastInsertId();
+        } else {
+            $stmt = $pdo->prepare('
+                UPDATE patient_visits SET
+                    visit_date = ?, chief_complain = ?, history_present_illness = ?, past_medical_history = ?,
+                    surgical_history = ?, family_history = ?, socio_economic_status = ?, observation_built = ?,
+                    observation_attitude_limb = ?, observation_posture = ?, observation_deformity = ?, aids_applications = ?,
+                    gait = ?, palpation_tenderness = ?, palpation_oedema = ?, palpation_warmth = ?, palpation_crepitus = ?,
+                    examination_rom = ?, muscle_power = ?, muscle_bulk = ?, ligament_instability = ?, pain_type = ?,
+                    pain_site = ?, pain_nature = ?, pain_aggravating_factor = ?, pain_relieving_factor = ?,
+                    pain_measurement = ?, gait_assessment = ?, diagnosis = ?, treatment_goals = ?
+                WHERE id = ?
+            ');
+            $stmt->execute([
+                $visitDate,
+                $fields['chief_complain'],
+                $fields['history_present_illness'],
+                $fields['past_medical_history'],
+                $fields['surgical_history'],
+                $fields['family_history'],
+                $fields['socio_economic_status'],
+                $fields['observation_built'],
+                $fields['observation_attitude_limb'],
+                $fields['observation_posture'],
+                $fields['observation_deformity'],
+                $fields['aids_applications'],
+                $fields['gait'],
+                $fields['palpation_tenderness'],
+                $fields['palpation_oedema'],
+                $fields['palpation_warmth'],
+                $fields['palpation_crepitus'],
+                $fields['examination_rom'],
+                $fields['muscle_power'],
+                $fields['muscle_bulk'],
+                $fields['ligament_instability'],
+                $fields['pain_type'],
+                $fields['pain_site'],
+                $fields['pain_nature'],
+                $fields['pain_aggravating_factor'],
+                $fields['pain_relieving_factor'],
+                $fields['pain_measurement'],
+                $fields['gait_assessment'],
+                $fields['diagnosis'],
+                $fields['treatment_goals'],
+                $latestVisitId,
+            ]);
+        }
+
+        $pdo->prepare('DELETE FROM patient_pain WHERE patient_id = ? AND visit_id = ?')->execute([$id, $latestVisitId]);
+        $selectedPain = $_POST['pain_subcategories'] ?? [];
+        if (is_array($selectedPain) && count($selectedPain) > 0) {
+            $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, visit_id, pain_master_id) VALUES (?, ?, ?)');
+            foreach ($selectedPain as $painId) {
+                $stmt->execute([$id, $latestVisitId, (int) $painId]);
             }
         }
 
@@ -366,6 +481,8 @@ require __DIR__ . '/../layout/header.php';
     <label>Gait Assessment
         <textarea name="gait_assessment" rows="2"><?php echo e($patient['gait_assessment']); ?></textarea>
     </label>
+
+    <label><input type="checkbox" name="create_new_visit" value="1"> Create new visit (keeps previous history)</label>
 
     <h3>Diagnosis &amp; Goals</h3>
     <label>Diagnosis

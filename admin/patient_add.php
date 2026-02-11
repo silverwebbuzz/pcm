@@ -8,10 +8,14 @@ $pdo = db();
 $error = '';
 $success = '';
 
-$painRows = $pdo->query("SELECT id, category, subcategory FROM pain_master WHERE active = 1 ORDER BY category, subcategory")->fetchAll();
 $painByCategory = [];
-foreach ($painRows as $row) {
-    $painByCategory[$row['category']][] = $row;
+try {
+    $painRows = $pdo->query("SELECT id, category, subcategory FROM pain_master WHERE active = 1 ORDER BY category, subcategory")->fetchAll();
+    foreach ($painRows as $row) {
+        $painByCategory[$row['category']][] = $row;
+    }
+} catch (Exception $e) {
+    $painByCategory = [];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -147,11 +151,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             $patientId = (int) $pdo->lastInsertId();
 
+            $visitDate = $data['assessment_date'] ?: current_date();
+            $stmt = $pdo->prepare('
+                INSERT INTO patient_visits (
+                    patient_id, visit_date, chief_complain, history_present_illness, past_medical_history,
+                    surgical_history, family_history, socio_economic_status, observation_built, observation_attitude_limb,
+                    observation_posture, observation_deformity, aids_applications, gait, palpation_tenderness,
+                    palpation_oedema, palpation_warmth, palpation_crepitus, examination_rom, muscle_power, muscle_bulk,
+                    ligament_instability, pain_type, pain_site, pain_nature, pain_aggravating_factor, pain_relieving_factor,
+                    pain_measurement, gait_assessment, diagnosis, treatment_goals, created_by
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ');
+            $stmt->execute([
+                $patientId,
+                $visitDate,
+                $data['chief_complain'],
+                $data['history_present_illness'],
+                $data['past_medical_history'],
+                $data['surgical_history'],
+                $data['family_history'],
+                $data['socio_economic_status'],
+                $data['observation_built'],
+                $data['observation_attitude_limb'],
+                $data['observation_posture'],
+                $data['observation_deformity'],
+                $data['aids_applications'],
+                $data['gait'],
+                $data['palpation_tenderness'],
+                $data['palpation_oedema'],
+                $data['palpation_warmth'],
+                $data['palpation_crepitus'],
+                $data['examination_rom'],
+                $data['muscle_power'],
+                $data['muscle_bulk'],
+                $data['ligament_instability'],
+                $data['pain_type'],
+                $data['pain_site'],
+                $data['pain_nature'],
+                $data['pain_aggravating_factor'],
+                $data['pain_relieving_factor'],
+                $data['pain_measurement'],
+                $data['gait_assessment'],
+                $data['diagnosis'],
+                $data['treatment_goals'],
+                current_user()['id'],
+            ]);
+            $visitId = (int) $pdo->lastInsertId();
+
             $selectedPain = $_POST['pain_subcategories'] ?? [];
             if (is_array($selectedPain) && count($selectedPain) > 0) {
-                $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, pain_master_id) VALUES (?, ?)');
+                $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, visit_id, pain_master_id) VALUES (?, ?, ?)');
                 foreach ($selectedPain as $painId) {
-                    $stmt->execute([$patientId, (int) $painId]);
+                    $stmt->execute([$patientId, $visitId, (int) $painId]);
                 }
             }
             $pdo->commit();

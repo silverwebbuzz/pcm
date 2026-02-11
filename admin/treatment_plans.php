@@ -29,8 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare('UPDATE treatment_plans SET patient_id = ?, total_sessions = ?, start_date = ?, notes = ?, status = ? WHERE id = ?');
         $stmt->execute([$patientId, $totalSessions, $startDate, $notes, $status, $planId]);
     } else {
-        $stmt = $pdo->prepare('INSERT INTO treatment_plans (patient_id, total_sessions, start_date, notes, status, created_by) VALUES (?, ?, ?, ?, ?, ?)');
-        $stmt->execute([$patientId, $totalSessions, $startDate, $notes, $status, current_user()['id']]);
+        $visitId = $patientId ? latest_visit_id($patientId) : null;
+        $stmt = $pdo->prepare('INSERT INTO treatment_plans (patient_id, visit_id, total_sessions, start_date, notes, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $stmt->execute([$patientId, $visitId, $totalSessions, $startDate, $notes, $status, current_user()['id']]);
     }
 }
 

@@ -14,14 +14,16 @@ if (!$patient) {
     redirect('admin/patients.php');
 }
 
+$currentVisitId = latest_visit_id($id);
+
 // Quick add session notes
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['quick_session'])) {
     $planId = (int) ($_POST['treatment_plan_id'] ?? 0);
     $date = $_POST['session_date'] ?? current_date();
     $attendance = $_POST['attendance'] ?? 'attended';
     $notes = trim($_POST['notes'] ?? '');
-    $stmt = $pdo->prepare('INSERT INTO sessions (patient_id, treatment_plan_id, session_date, attendance, notes, created_by) VALUES (?, ?, ?, ?, ?, ?)');
-    $stmt->execute([$id, $planId, $date, $attendance, $notes, current_user()['id']]);
+    $stmt = $pdo->prepare('INSERT INTO sessions (patient_id, treatment_plan_id, visit_id, session_date, attendance, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    $stmt->execute([$id, $planId, $currentVisitId, $date, $attendance, $notes, current_user()['id']]);
 }
 
 // Document upload
@@ -45,16 +47,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_document'])) {
     }
 }
 
-$plans = $pdo->prepare('SELECT * FROM treatment_plans WHERE patient_id = ? ORDER BY created_at DESC');
-$plans->execute([$id]);
+$plans = $pdo->prepare('SELECT * FROM treatment_plans WHERE patient_id = ? AND (visit_id = ? OR ? IS NULL) ORDER BY created_at DESC');
+$plans->execute([$id, $currentVisitId, $currentVisitId]);
 $plans = $plans->fetchAll();
 
-$sessions = $pdo->prepare('SELECT * FROM sessions WHERE patient_id = ? ORDER BY session_date DESC');
-$sessions->execute([$id]);
+$sessions = $pdo->prepare('SELECT * FROM sessions WHERE patient_id = ? AND (visit_id = ? OR ? IS NULL) ORDER BY session_date DESC');
+$sessions->execute([$id, $currentVisitId, $currentVisitId]);
 $sessions = $sessions->fetchAll();
 
-$payments = $pdo->prepare('SELECT * FROM payments WHERE patient_id = ? ORDER BY payment_date DESC');
-$payments->execute([$id]);
+$payments = $pdo->prepare('SELECT * FROM payments WHERE patient_id = ? AND (visit_id = ? OR ? IS NULL) ORDER BY payment_date DESC');
+$payments->execute([$id, $currentVisitId, $currentVisitId]);
 $payments = $payments->fetchAll();
 
 $documents = $pdo->prepare('SELECT * FROM patient_documents WHERE patient_id = ? ORDER BY uploaded_at DESC');
@@ -68,14 +70,18 @@ if (!empty($patient['user_id'])) {
     $patientEmail = (string) $stmt->fetchColumn();
 }
 
+$visitsStmt = $pdo->prepare('SELECT id, visit_date, chief_complain, diagnosis, created_at FROM patient_visits WHERE patient_id = ? ORDER BY created_at DESC');
+$visitsStmt->execute([$id]);
+$visits = $visitsStmt->fetchAll();
+
 $painStmt = $pdo->prepare('
     SELECT pm.category, pm.subcategory
     FROM patient_pain pp
     JOIN pain_master pm ON pm.id = pp.pain_master_id
-    WHERE pp.patient_id = ?
+    WHERE pp.patient_id = ? AND pp.visit_id = ?
     ORDER BY pm.category, pm.subcategory
 ');
-$painStmt->execute([$id]);
+$painStmt->execute([$id, $currentVisitId ?: 0]);
 $painRows = $painStmt->fetchAll();
 $painByCategory = [];
 foreach ($painRows as $row) {
@@ -126,6 +132,28 @@ require __DIR__ . '/../layout/header.php';
             <div class="stat-value"><?php echo $totalPlanSessions ?: 'N/A'; ?></div>
         </div>
         <div class="stat-icon">📅</div>
+    </div>
+</div>
+
+<div class="section-card" style="margin-top:16px;">
+    <div class="page-header">
+        <h3>Visit History</h3>
+        <a class="btn" href="patient_edit.php?id=<?php echo $patient['id']; ?>">Add New Visit</a>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Date</th><th>Chief Complaint</th><th>Diagnosis</th><th>Latest</th></tr></thead>
+            <tbody>
+            <?php foreach ($visits as $visit): ?>
+                <tr>
+                    <td><?php echo e($visit['visit_date']); ?></td>
+                    <td><?php echo e($visit['chief_complain']); ?></td>
+                    <td><?php echo e($visit['diagnosis']); ?></td>
+                    <td><?php echo (int) $visit['id'] === (int) $currentVisitId ? 'Yes' : ''; ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
 </div>
 
