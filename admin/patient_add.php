@@ -4,18 +4,10 @@ require_once __DIR__ . '/../helpers.php';
 require_login();
 require_role(['admin_doctor']);
 
-$pdo = db();
 $error = '';
 $success = '';
-
-$painByCategory = [];
-try {
-    $painRows = $pdo->query("SELECT id, category, subcategory FROM pain_master WHERE active = 1 ORDER BY category, subcategory")->fetchAll();
-    foreach ($painRows as $row) {
-        $painByCategory[$row['category']][] = $row;
-    }
-} catch (Exception $e) {
-    $painByCategory = [];
+if (!isset($pdo)) {
+    $pdo = db();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -26,41 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'gender' => trim($_POST['gender'] ?? ''),
         'dob' => $_POST['dob'] ?? null,
         'occupation' => trim($_POST['occupation'] ?? ''),
-        'assessment_date' => $_POST['assessment_date'] ?? null,
-        'dominance' => trim($_POST['dominance'] ?? ''),
-        'condition_duration' => trim($_POST['condition_duration'] ?? ''),
         'phone' => trim($_POST['phone'] ?? ''),
         'address' => trim($_POST['address'] ?? ''),
         'emergency_contact' => trim($_POST['emergency_contact'] ?? ''),
-        'chief_complain' => trim($_POST['chief_complain'] ?? ''),
-        'history_present_illness' => trim($_POST['history_present_illness'] ?? ''),
-        'past_medical_history' => trim($_POST['past_medical_history'] ?? ''),
-        'surgical_history' => trim($_POST['surgical_history'] ?? ''),
-        'family_history' => trim($_POST['family_history'] ?? ''),
-        'socio_economic_status' => trim($_POST['socio_economic_status'] ?? ''),
-        'observation_built' => trim($_POST['observation_built'] ?? ''),
-        'observation_attitude_limb' => trim($_POST['observation_attitude_limb'] ?? ''),
-        'observation_posture' => trim($_POST['observation_posture'] ?? ''),
-        'observation_deformity' => trim($_POST['observation_deformity'] ?? ''),
-        'aids_applications' => trim($_POST['aids_applications'] ?? ''),
-        'gait' => trim($_POST['gait'] ?? ''),
-        'palpation_tenderness' => trim($_POST['palpation_tenderness'] ?? ''),
-        'palpation_oedema' => trim($_POST['palpation_oedema'] ?? ''),
-        'palpation_warmth' => trim($_POST['palpation_warmth'] ?? ''),
-        'palpation_crepitus' => trim($_POST['palpation_crepitus'] ?? ''),
-        'examination_rom' => trim($_POST['examination_rom'] ?? ''),
-        'muscle_power' => trim($_POST['muscle_power'] ?? ''),
-        'muscle_bulk' => trim($_POST['muscle_bulk'] ?? ''),
-        'ligament_instability' => trim($_POST['ligament_instability'] ?? ''),
-        'pain_type' => trim($_POST['pain_type'] ?? ''),
-        'pain_site' => trim($_POST['pain_site'] ?? ''),
-        'pain_nature' => trim($_POST['pain_nature'] ?? ''),
-        'pain_aggravating_factor' => trim($_POST['pain_aggravating_factor'] ?? ''),
-        'pain_relieving_factor' => trim($_POST['pain_relieving_factor'] ?? ''),
-        'pain_measurement' => $_POST['pain_measurement'] !== '' ? (int) $_POST['pain_measurement'] : null,
-        'gait_assessment' => trim($_POST['gait_assessment'] ?? ''),
-        'diagnosis' => trim($_POST['diagnosis'] ?? ''),
-        'treatment_goals' => trim($_POST['treatment_goals'] ?? ''),
     ];
 
     if ($data['first_name'] === '' || $data['last_name'] === '') {
@@ -94,15 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt = $pdo->prepare('
                 INSERT INTO patients (
-                    user_id, first_name, last_name, age, gender, dob, occupation, assessment_date, dominance,
-                    condition_duration, phone, address, emergency_contact, chief_complain,
-                    history_present_illness, past_medical_history, surgical_history, family_history, socio_economic_status,
-                    observation_built, observation_attitude_limb, observation_posture, observation_deformity,
-                    aids_applications, gait, palpation_tenderness, palpation_oedema, palpation_warmth, palpation_crepitus,
-                    examination_rom, muscle_power, muscle_bulk, ligament_instability,
-                    pain_type, pain_site, pain_nature, pain_aggravating_factor, pain_relieving_factor, pain_measurement,
-                    gait_assessment, diagnosis, treatment_goals, created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    user_id, first_name, last_name, age, gender, dob, occupation,
+                    phone, address, emergency_contact, created_by
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ');
             $stmt->execute([
                 $userId,
@@ -112,101 +66,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['gender'],
                 $data['dob'],
                 $data['occupation'],
-                $data['assessment_date'],
-                $data['dominance'],
-                $data['condition_duration'],
                 $data['phone'],
                 $data['address'],
                 $data['emergency_contact'],
-                $data['chief_complain'],
-                $data['history_present_illness'],
-                $data['past_medical_history'],
-                $data['surgical_history'],
-                $data['family_history'],
-                $data['socio_economic_status'],
-                $data['observation_built'],
-                $data['observation_attitude_limb'],
-                $data['observation_posture'],
-                $data['observation_deformity'],
-                $data['aids_applications'],
-                $data['gait'],
-                $data['palpation_tenderness'],
-                $data['palpation_oedema'],
-                $data['palpation_warmth'],
-                $data['palpation_crepitus'],
-                $data['examination_rom'],
-                $data['muscle_power'],
-                $data['muscle_bulk'],
-                $data['ligament_instability'],
-                $data['pain_type'],
-                $data['pain_site'],
-                $data['pain_nature'],
-                $data['pain_aggravating_factor'],
-                $data['pain_relieving_factor'],
-                $data['pain_measurement'],
-                $data['gait_assessment'],
-                $data['diagnosis'],
-                $data['treatment_goals'],
                 current_user()['id'],
             ]);
-            $patientId = (int) $pdo->lastInsertId();
-
-            $visitDate = $data['assessment_date'] ?: current_date();
-            $stmt = $pdo->prepare('
-                INSERT INTO patient_cases (
-                    patient_id, visit_date, chief_complain, history_present_illness, past_medical_history,
-                    surgical_history, family_history, socio_economic_status, observation_built, observation_attitude_limb,
-                    observation_posture, observation_deformity, aids_applications, gait, palpation_tenderness,
-                    palpation_oedema, palpation_warmth, palpation_crepitus, examination_rom, muscle_power, muscle_bulk,
-                    ligament_instability, pain_type, pain_site, pain_nature, pain_aggravating_factor, pain_relieving_factor,
-                    pain_measurement, gait_assessment, diagnosis, treatment_goals, created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ');
-            $stmt->execute([
-                $patientId,
-                $visitDate,
-                $data['chief_complain'],
-                $data['history_present_illness'],
-                $data['past_medical_history'],
-                $data['surgical_history'],
-                $data['family_history'],
-                $data['socio_economic_status'],
-                $data['observation_built'],
-                $data['observation_attitude_limb'],
-                $data['observation_posture'],
-                $data['observation_deformity'],
-                $data['aids_applications'],
-                $data['gait'],
-                $data['palpation_tenderness'],
-                $data['palpation_oedema'],
-                $data['palpation_warmth'],
-                $data['palpation_crepitus'],
-                $data['examination_rom'],
-                $data['muscle_power'],
-                $data['muscle_bulk'],
-                $data['ligament_instability'],
-                $data['pain_type'],
-                $data['pain_site'],
-                $data['pain_nature'],
-                $data['pain_aggravating_factor'],
-                $data['pain_relieving_factor'],
-                $data['pain_measurement'],
-                $data['gait_assessment'],
-                $data['diagnosis'],
-                $data['treatment_goals'],
-                current_user()['id'],
-            ]);
-            $visitId = (int) $pdo->lastInsertId();
-
-            $selectedPain = $_POST['pain_subcategories'] ?? [];
-            if (is_array($selectedPain) && count($selectedPain) > 0) {
-            $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, case_id, pain_master_id) VALUES (?, ?, ?)');
-                foreach ($selectedPain as $painId) {
-                    $stmt->execute([$patientId, $visitId, (int) $painId]);
-                }
-            }
             $pdo->commit();
-            $success = 'Patient created successfully.';
+            $patientId = (int) $pdo->lastInsertId();
+            redirect('admin/case_add.php?patient_id=' . $patientId);
         } catch (Exception $e) {
             $pdo->rollBack();
             $error = $e->getMessage();
@@ -220,7 +87,7 @@ require __DIR__ . '/../layout/header.php';
 <?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
 <?php if ($success): ?><div class="success"><?php echo e($success); ?></div><?php endif; ?>
 <form method="post">
-    <h3>Assessment</h3>
+    <h3>Patient Details</h3>
     <div class="grid">
         <label>First Name
             <input name="first_name" required>
@@ -245,15 +112,6 @@ require __DIR__ . '/../layout/header.php';
         <label>Occupation
             <input name="occupation">
         </label>
-        <label>Date of Assessment
-            <input type="date" name="assessment_date" value="<?php echo current_date(); ?>">
-        </label>
-        <label>Dominance
-            <input name="dominance" placeholder="Right/Left">
-        </label>
-        <label>Duration of Condition
-            <input name="condition_duration">
-        </label>
         <label>Phone
             <input name="phone">
         </label>
@@ -264,133 +122,7 @@ require __DIR__ . '/../layout/header.php';
             <input name="emergency_contact">
         </label>
     </div>
-    <label>Chief Complain
-        <textarea name="chief_complain" rows="2"></textarea>
-    </label>
-
-    <h3>History</h3>
-    <label>History of Present Illness
-        <textarea name="history_present_illness" rows="3"></textarea>
-    </label>
-    <label>Past Medical History
-        <textarea name="past_medical_history" rows="3"></textarea>
-    </label>
-    <label>Surgical History
-        <textarea name="surgical_history" rows="3"></textarea>
-    </label>
-    <label>Family History
-        <textarea name="family_history" rows="3"></textarea>
-    </label>
-    <label>Socio Economic Status
-        <textarea name="socio_economic_status" rows="2"></textarea>
-    </label>
-
-    <h3>Observation</h3>
-    <label>Built of Patient
-        <textarea name="observation_built" rows="2"></textarea>
-    </label>
-    <label>Attitude of Limb
-        <textarea name="observation_attitude_limb" rows="2"></textarea>
-    </label>
-    <label>Posture
-        <textarea name="observation_posture" rows="2"></textarea>
-    </label>
-    <label>Deformity
-        <textarea name="observation_deformity" rows="2"></textarea>
-    </label>
-    <label>Aids &amp; Applications
-        <textarea name="aids_applications" rows="2"></textarea>
-    </label>
-    <label>Gait
-        <textarea name="gait" rows="2"></textarea>
-    </label>
-
-    <h3>On Palpation</h3>
-    <label>Tenderness
-        <textarea name="palpation_tenderness" rows="2"></textarea>
-    </label>
-    <label>Oedema
-        <select name="palpation_oedema">
-            <option value="">Select</option>
-            <option value="pitting">Pitting</option>
-            <option value="non_pitting">Non Pitting</option>
-        </select>
-    </label>
-    <label>Warmth
-        <textarea name="palpation_warmth" rows="2"></textarea>
-    </label>
-    <label>Crepitus
-        <textarea name="palpation_crepitus" rows="2"></textarea>
-    </label>
-
-    <h3>Examination</h3>
-    <label>ROM
-        <textarea name="examination_rom" rows="3"></textarea>
-    </label>
-    <label>Muscle Power
-        <textarea name="muscle_power" rows="2"></textarea>
-    </label>
-    <label>Muscle Bulk
-        <textarea name="muscle_bulk" rows="2"></textarea>
-    </label>
-    <label>Ligament Instability
-        <textarea name="ligament_instability" rows="2"></textarea>
-    </label>
-
-    <h3>Pain Assessment</h3>
-    <div class="section-card">
-        <div class="info-label">Pain Areas</div>
-        <div class="card-grid">
-            <?php foreach ($painByCategory as $category => $items): ?>
-                <label class="chip-select">
-                    <input type="checkbox" name="pain_categories[]" value="<?php echo e($category); ?>">
-                    <?php echo e($category); ?>
-                </label>
-            <?php endforeach; ?>
-        </div>
-        <?php foreach ($painByCategory as $category => $items): ?>
-            <div class="subcategory-group" data-category="<?php echo e($category); ?>" style="display:none; margin-top:10px;">
-                <div class="info-label"><?php echo e($category); ?> Subcategories</div>
-                <div class="card-grid">
-                    <?php foreach ($items as $item): ?>
-                        <label class="chip-select">
-                            <input type="checkbox" name="pain_subcategories[]" value="<?php echo (int) $item['id']; ?>">
-                            <?php echo e($item['subcategory']); ?>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        <?php endforeach; ?>
-    </div>
-    <label>Type of Pain
-        <textarea name="pain_type" rows="2"></textarea>
-    </label>
-    <label>Sight/Site of Pain
-        <textarea name="pain_site" rows="2"></textarea>
-    </label>
-    <label>Nature of Pain
-        <textarea name="pain_nature" rows="2"></textarea>
-    </label>
-    <label>Aggravating Factor
-        <textarea name="pain_aggravating_factor" rows="2"></textarea>
-    </label>
-    <label>Relieving Factor
-        <textarea name="pain_relieving_factor" rows="2"></textarea>
-    </label>
-    <label>Measurement of Pain (0-10)
-        <input type="number" name="pain_measurement" min="0" max="10">
-    </label>
-    <label>Gait Assessment
-        <textarea name="gait_assessment" rows="2"></textarea>
-    </label>
-
-    <h3>Diagnosis &amp; Goals</h3>
-    <label>Diagnosis
-        <textarea name="diagnosis" rows="3"></textarea>
-    </label>
-    <label>Treatment Goals
-        <textarea name="treatment_goals" rows="3"></textarea>
-    </label>
+    <p>After saving patient, you will be redirected to open a new case.</p>
 
     <h3>Create Patient Login (Optional)</h3>
     <label><input type="checkbox" name="create_login" value="1"> Create login for patient</label>
@@ -412,24 +144,4 @@ require __DIR__ . '/../layout/header.php';
 
     <button class="btn" type="submit">Save Patient</button>
 </form>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var categoryInputs = document.querySelectorAll('input[name="pain_categories[]"]');
-    var groups = document.querySelectorAll('.subcategory-group');
-    function toggleGroups() {
-        groups.forEach(function (group) {
-            var category = group.getAttribute('data-category');
-            var checked = false;
-            categoryInputs.forEach(function (input) {
-                if (input.value === category && input.checked) checked = true;
-            });
-            group.style.display = checked ? 'block' : 'none';
-        });
-    }
-    categoryInputs.forEach(function (input) {
-        input.addEventListener('change', toggleGroups);
-    });
-    toggleGroups();
-});
-</script>
 <?php require __DIR__ . '/../layout/footer.php'; ?>

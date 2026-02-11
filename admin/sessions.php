@@ -5,6 +5,7 @@ require_login();
 require_role(['admin_doctor']);
 
 $pdo = db();
+$caseId = (int) ($_GET['case_id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $patientId = (int) ($_POST['patient_id'] ?? 0);
@@ -12,25 +13,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = $_POST['session_date'] ?? current_date();
     $attendance = $_POST['attendance'] ?? 'attended';
     $notes = trim($_POST['notes'] ?? '');
-    $caseId = $patientId ? latest_case_id($patientId) : null;
+    $caseId = (int) ($_POST['case_id'] ?? 0) ?: ($patientId ? latest_case_id($patientId) : null);
     $pdo->prepare('INSERT INTO sessions (patient_id, treatment_plan_id, case_id, session_date, attendance, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)')
         ->execute([$patientId, $planId, $caseId, $date, $attendance, $notes, current_user()['id']]);
 }
 
 $patients = $pdo->query('SELECT id, first_name, last_name FROM patients ORDER BY first_name')->fetchAll();
-$plans = $pdo->query('SELECT id, patient_id, total_sessions FROM treatment_plans ORDER BY created_at DESC')->fetchAll();
+$plansQuery = 'SELECT id, patient_id, total_sessions FROM treatment_plans';
+$planParams = [];
+if ($caseId) {
+    $plansQuery .= ' WHERE case_id = ?';
+    $planParams[] = $caseId;
+}
+$plansQuery .= ' ORDER BY created_at DESC';
+$plansStmt = $pdo->prepare($plansQuery);
+$plansStmt->execute($planParams);
+$plans = $plansStmt->fetchAll();
 
-$sessions = $pdo->query('
+$sessionsQuery = '
     SELECT s.*, p.first_name, p.last_name
     FROM sessions s
     JOIN patients p ON p.id = s.patient_id
-    ORDER BY s.session_date DESC
-')->fetchAll();
+';
+$sessionParams = [];
+if ($caseId) {
+    $sessionsQuery .= ' WHERE s.case_id = ?';
+    $sessionParams[] = $caseId;
+}
+$sessionsQuery .= ' ORDER BY s.session_date DESC';
+$sessionsStmt = $pdo->prepare($sessionsQuery);
+$sessionsStmt->execute($sessionParams);
+$sessions = $sessionsStmt->fetchAll();
 
 require __DIR__ . '/../layout/header.php';
 ?>
 <h2>Sessions</h2>
 <form method="post">
+    <input type="hidden" name="case_id" value="<?php echo $caseId; ?>">
     <div class="grid">
         <label>Patient
             <select name="patient_id" required>

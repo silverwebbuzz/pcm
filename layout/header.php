@@ -8,6 +8,7 @@ if ($user) {
     if ($role === 'admin_doctor') {
         $menu = [
             'Dashboard' => 'admin/dashboard.php',
+            'Cases' => 'admin/cases.php',
             'Patients' => 'admin/patients.php',
             'Treatment Plans' => 'admin/treatment_plans.php',
             'Sessions' => 'admin/sessions.php',

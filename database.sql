@@ -67,6 +67,7 @@ CREATE TABLE patient_cases (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     visit_date DATE NOT NULL,
+    condition_duration VARCHAR(100),
     status ENUM('open','closed') NOT NULL DEFAULT 'open',
     closed_at DATE NULL,
     closed_notes TEXT,

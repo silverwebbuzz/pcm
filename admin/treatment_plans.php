@@ -6,6 +6,7 @@ require_role(['admin_doctor']);
 
 $pdo = db();
 $patientId = (int) ($_GET['patient_id'] ?? 0);
+$caseId = (int) ($_GET['case_id'] ?? 0);
 $editId = (int) ($_GET['edit'] ?? 0);
 $editPlan = null;
 if ($editId) {
@@ -20,16 +21,17 @@ if ($editId) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $planId = (int) ($_POST['plan_id'] ?? 0);
     $patientId = (int) ($_POST['patient_id'] ?? 0);
+    $caseId = (int) ($_POST['case_id'] ?? 0);
     $totalSessions = (int) ($_POST['total_sessions'] ?? 10);
     $startDate = $_POST['start_date'] ?? current_date();
     $notes = trim($_POST['notes'] ?? '');
     $status = trim($_POST['status'] ?? 'active');
 
     if ($planId) {
-        $stmt = $pdo->prepare('UPDATE treatment_plans SET patient_id = ?, total_sessions = ?, start_date = ?, notes = ?, status = ? WHERE id = ?');
-        $stmt->execute([$patientId, $totalSessions, $startDate, $notes, $status, $planId]);
+        $stmt = $pdo->prepare('UPDATE treatment_plans SET patient_id = ?, case_id = ?, total_sessions = ?, start_date = ?, notes = ?, status = ? WHERE id = ?');
+        $stmt->execute([$patientId, $caseId ?: null, $totalSessions, $startDate, $notes, $status, $planId]);
     } else {
-        $caseId = $patientId ? latest_case_id($patientId) : null;
+        $caseId = $caseId ?: ($patientId ? latest_case_id($patientId) : null);
         $stmt = $pdo->prepare('INSERT INTO treatment_plans (patient_id, case_id, total_sessions, start_date, notes, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)');
         $stmt->execute([$patientId, $caseId, $totalSessions, $startDate, $notes, $status, current_user()['id']]);
     }
@@ -45,9 +47,17 @@ $patients = $patientsStmt->fetchAll();
 
 $query = 'SELECT tp.*, p.first_name, p.last_name FROM treatment_plans tp JOIN patients p ON p.id = tp.patient_id';
 $params = [];
+$where = [];
 if ($patientId) {
-    $query .= ' WHERE tp.patient_id = ?';
+    $where[] = 'tp.patient_id = ?';
     $params[] = $patientId;
+}
+if ($caseId) {
+    $where[] = 'tp.case_id = ?';
+    $params[] = $caseId;
+}
+if ($where) {
+    $query .= ' WHERE ' . implode(' AND ', $where);
 }
 $query .= ' ORDER BY tp.created_at DESC';
 $stmt = $pdo->prepare($query);
@@ -59,6 +69,7 @@ require __DIR__ . '/../layout/header.php';
 <h2>Treatment Plans</h2>
 <form method="post">
     <input type="hidden" name="plan_id" value="<?php echo $editPlan ? (int) $editPlan['id'] : 0; ?>">
+    <input type="hidden" name="case_id" value="<?php echo $caseId; ?>">
     <div class="grid">
         <label>Patient
             <select name="patient_id" required>

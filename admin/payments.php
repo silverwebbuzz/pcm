@@ -6,6 +6,7 @@ require_role(['admin_doctor']);
 
 $pdo = db();
 $patientId = (int) ($_GET['patient_id'] ?? 0);
+$caseId = (int) ($_GET['case_id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $patientId = (int) ($_POST['patient_id'] ?? 0);
@@ -14,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = trim($_POST['method'] ?? '');
     $notes = trim($_POST['notes'] ?? '');
     $receiptNo = 'RCPT-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
-    $caseId = $patientId ? latest_case_id($patientId) : null;
+    $caseId = (int) ($_POST['case_id'] ?? 0) ?: ($patientId ? latest_case_id($patientId) : null);
     $stmt = $pdo->prepare('INSERT INTO payments (patient_id, case_id, amount, payment_date, method, notes, receipt_no, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute([$patientId, $caseId, $amount, $date, $method, $notes, $receiptNo, current_user()['id']]);
 }
@@ -23,9 +24,16 @@ $patients = $pdo->query('SELECT id, first_name, last_name FROM patients ORDER BY
 
 $query = 'SELECT pay.*, p.first_name, p.last_name FROM payments pay JOIN patients p ON p.id = pay.patient_id';
 $params = [];
+if ($patientId || $caseId) {
+    $query .= ' WHERE 1=1';
+}
 if ($patientId) {
-    $query .= ' WHERE pay.patient_id = ?';
+    $query .= ' AND pay.patient_id = ?';
     $params[] = $patientId;
+}
+if ($caseId) {
+    $query .= ' AND pay.case_id = ?';
+    $params[] = $caseId;
 }
 $query .= ' ORDER BY pay.payment_date DESC';
 $stmt = $pdo->prepare($query);
@@ -36,6 +44,7 @@ require __DIR__ . '/../layout/header.php';
 ?>
 <h2>Payments</h2>
 <form method="post">
+    <input type="hidden" name="case_id" value="<?php echo $caseId; ?>">
     <div class="grid">
         <label>Patient
             <select name="patient_id" required>
