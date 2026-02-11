@@ -65,18 +65,6 @@ require __DIR__ . '/../layout/header.php';
     </div>
 </div>
 
-<form class="toolbar" method="get">
-    <div class="toolbar-row">
-        <div>
-            <input type="text" name="q" placeholder="Search by name or phone..." value="<?php echo e($search); ?>">
-        </div>
-    </div>
-    <div class="actions">
-        <button class="btn" type="submit">Search</button>
-        <a class="btn ghost" href="patients.php">Reset</a>
-    </div>
-</form>
-
 <div class="table-wrap">
 <table class="data-table" data-page-size="7">
     <thead>

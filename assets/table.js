@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
             '</div>' +
             '<div class="table-controls-right">' +
             '  <label>Search: ' +
-            '    <input type="search" class="table-search" placeholder="">' +
+            '    <input type="search" class="table-search" placeholder="Search records...">' +
             '  </label>' +
             '</div>';
 

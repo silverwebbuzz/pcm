@@ -57,18 +57,6 @@ require __DIR__ . '/../layout/header.php';
     </div>
 </div>
 
-<form class="toolbar" method="get">
-    <div class="toolbar-row">
-        <div>
-            <input type="text" name="q" placeholder="Search by patient or complaint..." value="<?php echo e($search); ?>">
-        </div>
-    </div>
-    <div class="actions">
-        <button class="btn" type="submit">Filter</button>
-        <a class="btn ghost" href="cases.php?status=<?php echo e($status); ?>">Reset</a>
-    </div>
-</form>
-
 <div class="section-card" style="margin-top: 12px;">
     <div class="chip-group">
         <a class="btn <?php echo $status === 'open' ? '' : 'ghost'; ?>" href="cases.php?status=open">Open</a>
