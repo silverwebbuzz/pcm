@@ -174,7 +174,7 @@ require __DIR__ . '/../layout/header.php';
         <?php else: ?>
             <?php foreach ($plans as $plan): ?>
                 <tr>
-                    <td><?php echo e($plan['plan_name']); ?></td>
+                    <td><?php echo e($plan['plan_name'] ?: ('Plan #' . $plan['id'])); ?></td>
                     <td><?php echo e($plan['total_sessions']); ?></td>
                     <td><?php echo e($plan['status']); ?></td>
                 </tr>
@@ -205,7 +205,7 @@ require __DIR__ . '/../layout/header.php';
                 <tr>
                     <td><?php echo e($session['session_date']); ?></td>
                     <td><?php echo e($session['notes']); ?></td>
-                    <td><?php echo e($session['status']); ?></td>
+                    <td><?php echo e($session['attendance']); ?></td>
                 </tr>
             <?php endforeach; ?>
         <?php endif; ?>

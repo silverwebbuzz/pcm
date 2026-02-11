@@ -29,6 +29,7 @@ $plansQuery .= ' ORDER BY created_at DESC';
 $plansStmt = $pdo->prepare($plansQuery);
 $plansStmt->execute($planParams);
 $plans = $plansStmt->fetchAll();
+$planDisabled = $caseId && !$plans;
 
 $sessionsQuery = '
     SELECT s.*, p.first_name, p.last_name
@@ -48,6 +49,13 @@ $sessions = $sessionsStmt->fetchAll();
 require __DIR__ . '/../layout/header.php';
 ?>
 <h2>Sessions</h2>
+<?php if ($planDisabled): ?>
+    <div class="callout">
+        <div class="callout-title">Create a plan first</div>
+        <div class="callout-body">This case has no treatment plan yet. Create a plan to add sessions.</div>
+        <a class="btn" href="treatment_plans.php?case_id=<?php echo $caseId; ?>">Create Treatment Plan</a>
+    </div>
+<?php endif; ?>
 <form method="post">
     <input type="hidden" name="case_id" value="<?php echo $caseId; ?>">
     <div class="grid">
@@ -60,7 +68,7 @@ require __DIR__ . '/../layout/header.php';
             </select>
         </label>
         <label>Treatment Plan
-            <select name="treatment_plan_id" required>
+            <select name="treatment_plan_id" required <?php if ($planDisabled) echo 'disabled'; ?>>
                 <option value="">Select</option>
                 <?php foreach ($plans as $plan): ?>
                     <option value="<?php echo $plan['id']; ?>">Plan #<?php echo $plan['id']; ?> (<?php echo $plan['total_sessions']; ?>)</option>
@@ -81,7 +89,7 @@ require __DIR__ . '/../layout/header.php';
     <label>Notes
         <textarea name="notes" rows="2"></textarea>
     </label>
-    <button class="btn" type="submit">Add Session</button>
+    <button class="btn" type="submit" <?php if ($planDisabled) echo 'disabled'; ?>>Add Session</button>
 </form>
 
 <table>
