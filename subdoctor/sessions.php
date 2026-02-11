@@ -68,44 +68,46 @@ require __DIR__ . '/../layout/header.php';
 ?>
 <h2>Session Notes</h2>
 <form method="post">
-    <input type="hidden" name="session_id" value="<?php echo $editSession ? (int) $editSession['id'] : 0; ?>">
-    <div class="grid">
-        <label>Case
-            <select name="case_id" required>
-                <option value="">Select</option>
-                <?php foreach ($cases as $c): ?>
-                    <option value="<?php echo $c['case_id']; ?>" <?php if ($caseId === (int) $c['case_id']) echo 'selected'; ?>>
-                        <?php echo e($c['first_name'] . ' ' . $c['last_name']); ?> - <?php echo e($c['visit_date']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+    <div class="form-card">
+        <input type="hidden" name="session_id" value="<?php echo $editSession ? (int) $editSession['id'] : 0; ?>">
+        <div class="grid">
+            <label>Case
+                <select name="case_id" required>
+                    <option value="">Select</option>
+                    <?php foreach ($cases as $c): ?>
+                        <option value="<?php echo $c['case_id']; ?>" <?php if ($caseId === (int) $c['case_id']) echo 'selected'; ?>>
+                            <?php echo e($c['first_name'] . ' ' . $c['last_name']); ?> - <?php echo e($c['visit_date']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Treatment Plan
+                <select name="treatment_plan_id" required>
+                    <?php foreach ($plans as $plan): ?>
+                        <option value="<?php echo $plan['id']; ?>" <?php if (($editSession['treatment_plan_id'] ?? 0) == $plan['id']) echo 'selected'; ?>>
+                            Plan #<?php echo $plan['id']; ?> (<?php echo $plan['total_sessions']; ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Date
+                <input type="date" name="session_date" value="<?php echo e($editSession['session_date'] ?? current_date()); ?>">
+            </label>
+            <label>Attendance
+                <select name="attendance">
+                    <?php foreach (['attended','missed','cancelled'] as $att): ?>
+                        <option value="<?php echo $att; ?>" <?php if (($editSession['attendance'] ?? 'attended') === $att) echo 'selected'; ?>>
+                            <?php echo ucfirst($att); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+        </div>
+        <label>Notes
+            <textarea name="notes" rows="3"><?php echo e($editSession['notes'] ?? ''); ?></textarea>
         </label>
-        <label>Treatment Plan
-            <select name="treatment_plan_id" required>
-                <?php foreach ($plans as $plan): ?>
-                    <option value="<?php echo $plan['id']; ?>" <?php if (($editSession['treatment_plan_id'] ?? 0) == $plan['id']) echo 'selected'; ?>>
-                        Plan #<?php echo $plan['id']; ?> (<?php echo $plan['total_sessions']; ?>)
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-        <label>Date
-            <input type="date" name="session_date" value="<?php echo e($editSession['session_date'] ?? current_date()); ?>">
-        </label>
-        <label>Attendance
-            <select name="attendance">
-                <?php foreach (['attended','missed','cancelled'] as $att): ?>
-                    <option value="<?php echo $att; ?>" <?php if (($editSession['attendance'] ?? 'attended') === $att) echo 'selected'; ?>>
-                        <?php echo ucfirst($att); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </label>
+        <button class="btn" type="submit"><?php echo $editSession ? 'Update Notes' : 'Save Notes'; ?></button>
     </div>
-    <label>Notes
-        <textarea name="notes" rows="3"><?php echo e($editSession['notes'] ?? ''); ?></textarea>
-    </label>
-    <button class="btn" type="submit"><?php echo $editSession ? 'Update Notes' : 'Save Notes'; ?></button>
 </form>
 
 <?php if ($caseId): ?>

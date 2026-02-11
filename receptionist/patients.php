@@ -54,33 +54,35 @@ require __DIR__ . '/../layout/header.php';
 ?>
 <h2>Register Patients</h2>
 <form method="post">
-    <input type="hidden" name="patient_id" value="<?php echo $patient ? (int) $patient['id'] : 0; ?>">
-    <div class="grid">
-        <label>First Name
-            <input name="first_name" required value="<?php echo e($patient['first_name'] ?? ''); ?>">
-        </label>
-        <label>Last Name
-            <input name="last_name" required value="<?php echo e($patient['last_name'] ?? ''); ?>">
-        </label>
-        <label>Gender
-            <select name="gender">
-                <option value="">Select</option>
-                <?php foreach (['Male','Female','Other'] as $g): ?>
-                    <option value="<?php echo $g; ?>" <?php if (($patient['gender'] ?? '') === $g) echo 'selected'; ?>><?php echo $g; ?></option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-        <label>Date of Birth
-            <input type="date" name="dob" value="<?php echo e($patient['dob'] ?? ''); ?>">
-        </label>
-        <label>Phone
-            <input name="phone" value="<?php echo e($patient['phone'] ?? ''); ?>">
-        </label>
-        <label>Address
-            <input name="address" value="<?php echo e($patient['address'] ?? ''); ?>">
-        </label>
+    <div class="form-card">
+        <input type="hidden" name="patient_id" value="<?php echo $patient ? (int) $patient['id'] : 0; ?>">
+        <div class="grid">
+            <label>First Name
+                <input name="first_name" required value="<?php echo e($patient['first_name'] ?? ''); ?>">
+            </label>
+            <label>Last Name
+                <input name="last_name" required value="<?php echo e($patient['last_name'] ?? ''); ?>">
+            </label>
+            <label>Gender
+                <select name="gender">
+                    <option value="">Select</option>
+                    <?php foreach (['Male','Female','Other'] as $g): ?>
+                        <option value="<?php echo $g; ?>" <?php if (($patient['gender'] ?? '') === $g) echo 'selected'; ?>><?php echo $g; ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Date of Birth
+                <input type="date" name="dob" value="<?php echo e($patient['dob'] ?? ''); ?>">
+            </label>
+            <label>Phone
+                <input name="phone" value="<?php echo e($patient['phone'] ?? ''); ?>">
+            </label>
+            <label>Address
+                <input name="address" value="<?php echo e($patient['address'] ?? ''); ?>">
+            </label>
+        </div>
+        <button class="btn" type="submit"><?php echo $patient ? 'Update' : 'Register'; ?></button>
     </div>
-    <button class="btn" type="submit"><?php echo $patient ? 'Update' : 'Register'; ?></button>
 </form>
 
 <table class="data-table" data-page-size="7">

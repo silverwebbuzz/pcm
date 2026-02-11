@@ -40,27 +40,29 @@ require __DIR__ . '/../layout/header.php';
 ?>
 <h2>Assign Patients to Sub-Doctors</h2>
 <form method="post">
-    <div class="grid">
-        <label>Open Case
-            <select name="case_id" required>
-                <option value="">Select</option>
-                <?php foreach ($cases as $c): ?>
-                    <option value="<?php echo $c['case_id']; ?>">
-                        <?php echo e($c['first_name'] . ' ' . $c['last_name']); ?> - <?php echo e($c['visit_date']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-        <label>Sub-Doctor
-            <select name="sub_doctor_id" required>
-                <option value="">Select</option>
-                <?php foreach ($subDoctors as $d): ?>
-                    <option value="<?php echo $d['id']; ?>"><?php echo e($d['name']); ?></option>
-                <?php endforeach; ?>
-            </select>
-        </label>
+    <div class="form-card">
+        <div class="grid">
+            <label>Open Case
+                <select name="case_id" required>
+                    <option value="">Select</option>
+                    <?php foreach ($cases as $c): ?>
+                        <option value="<?php echo $c['case_id']; ?>">
+                            <?php echo e($c['first_name'] . ' ' . $c['last_name']); ?> - <?php echo e($c['visit_date']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Sub-Doctor
+                <select name="sub_doctor_id" required>
+                    <option value="">Select</option>
+                    <?php foreach ($subDoctors as $d): ?>
+                        <option value="<?php echo $d['id']; ?>"><?php echo e($d['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+        </div>
+        <button class="btn" type="submit">Assign</button>
     </div>
-    <button class="btn" type="submit">Assign</button>
 </form>
 
 <table class="data-table" data-page-size="7">

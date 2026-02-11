@@ -127,6 +127,8 @@ require __DIR__ . '/../layout/header.php';
 </div>
 <?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
 <form method="post">
+    <div class="form-layout">
+        <div class="form-main">
     <div class="section-card">
         <div class="grid">
             <label>Patient
@@ -236,6 +238,8 @@ require __DIR__ . '/../layout/header.php';
         </div>
     </div>
 
+        </div>
+        <div class="form-side">
     <div class="section-card">
         <div class="section-title"><h3>Pain Areas</h3></div>
         <div class="card-grid">
@@ -297,7 +301,8 @@ require __DIR__ . '/../layout/header.php';
             <textarea name="treatment_goals" rows="2"></textarea>
         </label>
     </div>
-
+        </div>
+    </div>
     <button class="btn" type="submit">Open Case</button>
 </form>
 <script>

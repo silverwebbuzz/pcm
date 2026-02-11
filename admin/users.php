@@ -44,32 +44,34 @@ require __DIR__ . '/../layout/header.php';
 <h2>Manage Users</h2>
 <?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
 <form method="post">
-    <div class="grid">
-        <label>Name
-            <input name="name" required>
-        </label>
-        <label>Email
-            <input type="email" name="email" required>
-        </label>
-        <label>Role
-            <select name="role">
-                <option value="sub_doctor">Sub-Doctor</option>
-                <option value="receptionist">Receptionist</option>
-                <option value="admin_doctor">Admin Doctor</option>
-            </select>
-        </label>
-        <label>Temporary Password
-            <input type="password" name="password" required>
-        </label>
-        <label>Security Question
-            <input name="security_question" required>
-        </label>
-        <label>Security Answer
-            <input name="security_answer" required>
-        </label>
-        <label><input type="checkbox" name="can_view_reports" value="1"> Allow Reports</label>
+    <div class="form-card">
+        <div class="grid">
+            <label>Name
+                <input name="name" required>
+            </label>
+            <label>Email
+                <input type="email" name="email" required>
+            </label>
+            <label>Role
+                <select name="role">
+                    <option value="sub_doctor">Sub-Doctor</option>
+                    <option value="receptionist">Receptionist</option>
+                    <option value="admin_doctor">Admin Doctor</option>
+                </select>
+            </label>
+            <label>Temporary Password
+                <input type="password" name="password" required>
+            </label>
+            <label>Security Question
+                <input name="security_question" required>
+            </label>
+            <label>Security Answer
+                <input name="security_answer" required>
+            </label>
+            <label><input type="checkbox" name="can_view_reports" value="1"> Allow Reports</label>
+        </div>
+        <button class="btn" type="submit">Create User</button>
     </div>
-    <button class="btn" type="submit">Create User</button>
 </form>
 
 <table class="data-table" data-page-size="7">

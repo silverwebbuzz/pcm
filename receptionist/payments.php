@@ -30,29 +30,31 @@ require __DIR__ . '/../layout/header.php';
 ?>
 <h2>Payments</h2>
 <form method="post">
-    <div class="grid">
-        <label>Patient
-            <select name="patient_id" required>
-                <option value="">Select</option>
-                <?php foreach ($patients as $p): ?>
-                    <option value="<?php echo $p['id']; ?>"><?php echo e($p['first_name'] . ' ' . $p['last_name']); ?></option>
-                <?php endforeach; ?>
-            </select>
+    <div class="form-card">
+        <div class="grid">
+            <label>Patient
+                <select name="patient_id" required>
+                    <option value="">Select</option>
+                    <?php foreach ($patients as $p): ?>
+                        <option value="<?php echo $p['id']; ?>"><?php echo e($p['first_name'] . ' ' . $p['last_name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Amount
+                <input type="number" step="0.01" name="amount" required>
+            </label>
+            <label>Date
+                <input type="date" name="payment_date" value="<?php echo current_date(); ?>">
+            </label>
+            <label>Method
+                <input name="method" placeholder="Cash/UPI/Card">
+            </label>
+        </div>
+        <label>Notes
+            <textarea name="notes" rows="2"></textarea>
         </label>
-        <label>Amount
-            <input type="number" step="0.01" name="amount" required>
-        </label>
-        <label>Date
-            <input type="date" name="payment_date" value="<?php echo current_date(); ?>">
-        </label>
-        <label>Method
-            <input name="method" placeholder="Cash/UPI/Card">
-        </label>
+        <button class="btn" type="submit">Record Payment</button>
     </div>
-    <label>Notes
-        <textarea name="notes" rows="2"></textarea>
-    </label>
-    <button class="btn" type="submit">Record Payment</button>
 </form>
 
 <table class="data-table" data-page-size="7">

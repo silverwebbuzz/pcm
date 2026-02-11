@@ -68,45 +68,47 @@ require __DIR__ . '/../layout/header.php';
 ?>
 <h2>Treatment Plans</h2>
 <form method="post">
-    <input type="hidden" name="plan_id" value="<?php echo $editPlan ? (int) $editPlan['id'] : 0; ?>">
-    <input type="hidden" name="case_id" value="<?php echo $caseId; ?>">
-    <div class="grid">
-        <label>Patient
-            <select name="patient_id" required>
-                <option value="">Select</option>
-                <?php foreach ($patients as $p): ?>
-                    <option value="<?php echo $p['id']; ?>" <?php if ($patientId === (int) $p['id']) echo 'selected'; ?>>
-                        <?php echo e($p['first_name'] . ' ' . $p['last_name']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+    <div class="form-card">
+        <input type="hidden" name="plan_id" value="<?php echo $editPlan ? (int) $editPlan['id'] : 0; ?>">
+        <input type="hidden" name="case_id" value="<?php echo $caseId; ?>">
+        <div class="grid">
+            <label>Patient
+                <select name="patient_id" required>
+                    <option value="">Select</option>
+                    <?php foreach ($patients as $p): ?>
+                        <option value="<?php echo $p['id']; ?>" <?php if ($patientId === (int) $p['id']) echo 'selected'; ?>>
+                            <?php echo e($p['first_name'] . ' ' . $p['last_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Total Sessions
+                <select name="total_sessions">
+                    <?php foreach ([10,15,20] as $count): ?>
+                        <option value="<?php echo $count; ?>" <?php if (($editPlan['total_sessions'] ?? 10) == $count) echo 'selected'; ?>>
+                            <?php echo $count; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Start Date
+                <input type="date" name="start_date" value="<?php echo e($editPlan['start_date'] ?? current_date()); ?>">
+            </label>
+            <label>Status
+                <select name="status">
+                    <?php foreach (['active','completed','paused'] as $st): ?>
+                        <option value="<?php echo $st; ?>" <?php if (($editPlan['status'] ?? 'active') === $st) echo 'selected'; ?>>
+                            <?php echo ucfirst($st); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+        </div>
+        <label>Notes
+            <textarea name="notes" rows="2"><?php echo e($editPlan['notes'] ?? ''); ?></textarea>
         </label>
-        <label>Total Sessions
-            <select name="total_sessions">
-                <?php foreach ([10,15,20] as $count): ?>
-                    <option value="<?php echo $count; ?>" <?php if (($editPlan['total_sessions'] ?? 10) == $count) echo 'selected'; ?>>
-                        <?php echo $count; ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-        <label>Start Date
-            <input type="date" name="start_date" value="<?php echo e($editPlan['start_date'] ?? current_date()); ?>">
-        </label>
-        <label>Status
-            <select name="status">
-                <?php foreach (['active','completed','paused'] as $st): ?>
-                    <option value="<?php echo $st; ?>" <?php if (($editPlan['status'] ?? 'active') === $st) echo 'selected'; ?>>
-                        <?php echo ucfirst($st); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </label>
+        <button class="btn" type="submit"><?php echo $editPlan ? 'Update Plan' : 'Create Plan'; ?></button>
     </div>
-    <label>Notes
-        <textarea name="notes" rows="2"><?php echo e($editPlan['notes'] ?? ''); ?></textarea>
-    </label>
-    <button class="btn" type="submit"><?php echo $editPlan ? 'Update Plan' : 'Create Plan'; ?></button>
 </form>
 
 <table class="data-table" data-page-size="7">

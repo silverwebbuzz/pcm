@@ -108,65 +108,73 @@ require __DIR__ . '/../layout/header.php';
 <?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
 <?php if ($success): ?><div class="success"><?php echo e($success); ?></div><?php endif; ?>
 <form method="post">
-    <h3>Patient Details</h3>
-    <div class="grid">
-        <label>First Name
-            <input name="first_name" value="<?php echo e($patient['first_name']); ?>" required>
-        </label>
-        <label>Last Name
-            <input name="last_name" value="<?php echo e($patient['last_name']); ?>" required>
-        </label>
-        <label>Age
-            <input type="number" name="age" min="0" value="<?php echo e($patient['age']); ?>">
-        </label>
-        <label>Gender
-            <select name="gender">
-                <option value="">Select</option>
-                <?php foreach (['Male','Female','Other'] as $g): ?>
-                    <option value="<?php echo $g; ?>" <?php if ($patient['gender'] === $g) echo 'selected'; ?>><?php echo $g; ?></option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-        <label>Date of Birth
-            <input type="date" name="dob" value="<?php echo e($patient['dob']); ?>">
-        </label>
-        <label>Occupation
-            <input name="occupation" value="<?php echo e($patient['occupation']); ?>">
-        </label>
-        <label>Phone
-            <input name="phone" value="<?php echo e($patient['phone']); ?>">
-        </label>
-        <label>Address
-            <input name="address" value="<?php echo e($patient['address']); ?>">
-        </label>
-        <label>Emergency Contact
-            <input name="emergency_contact" value="<?php echo e($patient['emergency_contact']); ?>">
-        </label>
-    </div>
-
-    <h3>Patient Login</h3>
-    <?php if ($user): ?>
-        <p>Login Email: <?php echo e($user['email']); ?></p>
-        <label><input type="checkbox" name="active" value="1" <?php if ((int) $user['active'] === 1) echo 'checked'; ?>> Active Account</label>
-    <?php else: ?>
-        <label><input type="checkbox" name="create_login" value="1"> Create login for patient</label>
-        <div class="grid">
-            <label>Email
-                <input type="email" name="email">
-            </label>
-            <label>Temporary Password
-                <input type="password" name="password">
-            </label>
-            <label>Security Question
-                <input name="security_question">
-            </label>
-            <label>Security Answer
-                <input name="security_answer">
-            </label>
-            <label><input type="checkbox" name="active" value="1"> Active Account</label>
+    <div class="form-layout">
+        <div class="form-main">
+            <div class="form-card">
+                <div class="section-title"><h3>Patient Details</h3></div>
+                <div class="grid">
+                    <label>First Name
+                        <input name="first_name" value="<?php echo e($patient['first_name']); ?>" required>
+                    </label>
+                    <label>Last Name
+                        <input name="last_name" value="<?php echo e($patient['last_name']); ?>" required>
+                    </label>
+                    <label>Age
+                        <input type="number" name="age" min="0" value="<?php echo e($patient['age']); ?>">
+                    </label>
+                    <label>Gender
+                        <select name="gender">
+                            <option value="">Select</option>
+                            <?php foreach (['Male','Female','Other'] as $g): ?>
+                                <option value="<?php echo $g; ?>" <?php if ($patient['gender'] === $g) echo 'selected'; ?>><?php echo $g; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <label>Date of Birth
+                        <input type="date" name="dob" value="<?php echo e($patient['dob']); ?>">
+                    </label>
+                    <label>Occupation
+                        <input name="occupation" value="<?php echo e($patient['occupation']); ?>">
+                    </label>
+                    <label>Phone
+                        <input name="phone" value="<?php echo e($patient['phone']); ?>">
+                    </label>
+                    <label>Address
+                        <input name="address" value="<?php echo e($patient['address']); ?>">
+                    </label>
+                    <label>Emergency Contact
+                        <input name="emergency_contact" value="<?php echo e($patient['emergency_contact']); ?>">
+                    </label>
+                </div>
+            </div>
         </div>
-    <?php endif; ?>
-
+        <div class="form-side">
+            <div class="form-card">
+                <div class="section-title"><h3>Patient Login</h3></div>
+                <?php if ($user): ?>
+                    <p class="form-note">Login Email: <?php echo e($user['email']); ?></p>
+                    <label><input type="checkbox" name="active" value="1" <?php if ((int) $user['active'] === 1) echo 'checked'; ?>> Active Account</label>
+                <?php else: ?>
+                    <label><input type="checkbox" name="create_login" value="1"> Create login for patient</label>
+                    <div class="grid">
+                        <label>Email
+                            <input type="email" name="email">
+                        </label>
+                        <label>Temporary Password
+                            <input type="password" name="password">
+                        </label>
+                        <label>Security Question
+                            <input name="security_question">
+                        </label>
+                        <label>Security Answer
+                            <input name="security_answer">
+                        </label>
+                        <label><input type="checkbox" name="active" value="1"> Active Account</label>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
     <button class="btn" type="submit">Update Patient</button>
 </form>
 <?php require __DIR__ . '/../layout/footer.php'; ?>

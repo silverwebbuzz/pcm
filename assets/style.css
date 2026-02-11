@@ -493,6 +493,26 @@ tbody tr:last-child td { border-bottom: 0; }
     margin-top: 8px;
 }
 
+.form-layout {
+    display: grid;
+    gap: 16px;
+    align-items: start;
+}
+.form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow);
+}
+.form-card .section-title {
+    margin-top: 0;
+}
+.form-note {
+    font-size: 13px;
+    color: var(--muted);
+}
+
 input, select, textarea {
     width: 100%;
     padding: 10px 12px;
@@ -596,6 +616,7 @@ label { display: block; margin-bottom: 12px; font-size: 14px; color: #4b5875; }
     .toolbar-row { grid-template-columns: 2fr 1fr 1fr 1fr; }
     .card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .info-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .form-layout { grid-template-columns: 2fr 1fr; }
 }
 @media (min-width: 1280px) {
     .container { padding: 26px; }
