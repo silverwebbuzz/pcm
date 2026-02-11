@@ -119,102 +119,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require __DIR__ . '/../layout/header.php';
 ?>
-<h2>Open New Case</h2>
+<div class="page-header">
+    <div>
+        <h2>Open New Case</h2>
+        <div class="page-subtitle">Capture episode-specific details for the patient.</div>
+    </div>
+</div>
 <?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
 <form method="post">
-    <div class="grid">
-        <label>Patient
-            <select name="patient_id" required>
-                <option value="">Select</option>
-                <?php foreach ($patients as $p): ?>
-                    <option value="<?php echo $p['id']; ?>" <?php if ($patientId === (int) $p['id']) echo 'selected'; ?>>
-                        <?php echo e($p['first_name'] . ' ' . $p['last_name']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-        <label>Visit Date
-            <input type="date" name="visit_date" value="<?php echo current_date(); ?>">
-        </label>
-        <label>Duration of Condition
-            <input name="condition_duration">
+    <div class="section-card">
+        <div class="grid">
+            <label>Patient
+                <select name="patient_id" required>
+                    <option value="">Select</option>
+                    <?php foreach ($patients as $p): ?>
+                        <option value="<?php echo $p['id']; ?>" <?php if ($patientId === (int) $p['id']) echo 'selected'; ?>>
+                            <?php echo e($p['first_name'] . ' ' . $p['last_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>Visit Date
+                <input type="date" name="visit_date" value="<?php echo current_date(); ?>">
+            </label>
+            <label>Duration of Condition
+                <input name="condition_duration">
+            </label>
+        </div>
+        <label>Chief Complaint
+            <textarea name="chief_complain" rows="2"></textarea>
         </label>
     </div>
-    <label>Chief Complaint
-        <textarea name="chief_complain" rows="2"></textarea>
-    </label>
 
-    <h3>History</h3>
-    <label>History of Present Illness
-        <textarea name="history_present_illness" rows="3"></textarea>
-    </label>
-    <label>Past Medical History
-        <textarea name="past_medical_history" rows="3"></textarea>
-    </label>
-    <label>Surgical History
-        <textarea name="surgical_history" rows="3"></textarea>
-    </label>
-    <label>Family History
-        <textarea name="family_history" rows="3"></textarea>
-    </label>
-    <label>Socio Economic Status
-        <textarea name="socio_economic_status" rows="2"></textarea>
-    </label>
-
-    <h3>Observation</h3>
-    <label>Built of Patient
-        <textarea name="observation_built" rows="2"></textarea>
-    </label>
-    <label>Attitude of Limb
-        <textarea name="observation_attitude_limb" rows="2"></textarea>
-    </label>
-    <label>Posture
-        <textarea name="observation_posture" rows="2"></textarea>
-    </label>
-    <label>Deformity
-        <textarea name="observation_deformity" rows="2"></textarea>
-    </label>
-    <label>Aids &amp; Applications
-        <textarea name="aids_applications" rows="2"></textarea>
-    </label>
-    <label>Gait
-        <textarea name="gait" rows="2"></textarea>
-    </label>
-
-    <h3>On Palpation</h3>
-    <label>Tenderness
-        <textarea name="palpation_tenderness" rows="2"></textarea>
-    </label>
-    <label>Oedema
-        <select name="palpation_oedema">
-            <option value="">Select</option>
-            <option value="pitting">Pitting</option>
-            <option value="non_pitting">Non Pitting</option>
-        </select>
-    </label>
-    <label>Warmth
-        <textarea name="palpation_warmth" rows="2"></textarea>
-    </label>
-    <label>Crepitus
-        <textarea name="palpation_crepitus" rows="2"></textarea>
-    </label>
-
-    <h3>Examination</h3>
-    <label>ROM
-        <textarea name="examination_rom" rows="3"></textarea>
-    </label>
-    <label>Muscle Power
-        <textarea name="muscle_power" rows="2"></textarea>
-    </label>
-    <label>Muscle Bulk
-        <textarea name="muscle_bulk" rows="2"></textarea>
-    </label>
-    <label>Ligament Instability
-        <textarea name="ligament_instability" rows="2"></textarea>
-    </label>
-
-    <h3>Pain Areas</h3>
     <div class="section-card">
+        <div class="section-title"><h3>History</h3></div>
+        <div class="grid">
+            <label>History of Present Illness
+                <textarea name="history_present_illness" rows="3"></textarea>
+            </label>
+            <label>Past Medical History
+                <textarea name="past_medical_history" rows="3"></textarea>
+            </label>
+            <label>Surgical History
+                <textarea name="surgical_history" rows="3"></textarea>
+            </label>
+            <label>Family History
+                <textarea name="family_history" rows="3"></textarea>
+            </label>
+            <label>Socio Economic Status
+                <textarea name="socio_economic_status" rows="2"></textarea>
+            </label>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title"><h3>Observation</h3></div>
+        <div class="grid">
+            <label>Built of Patient
+                <textarea name="observation_built" rows="2"></textarea>
+            </label>
+            <label>Attitude of Limb
+                <textarea name="observation_attitude_limb" rows="2"></textarea>
+            </label>
+            <label>Posture
+                <textarea name="observation_posture" rows="2"></textarea>
+            </label>
+            <label>Deformity
+                <textarea name="observation_deformity" rows="2"></textarea>
+            </label>
+            <label>Aids &amp; Applications
+                <textarea name="aids_applications" rows="2"></textarea>
+            </label>
+            <label>Gait
+                <textarea name="gait" rows="2"></textarea>
+            </label>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title"><h3>On Palpation</h3></div>
+        <div class="grid">
+            <label>Tenderness
+                <textarea name="palpation_tenderness" rows="2"></textarea>
+            </label>
+            <label>Oedema
+                <select name="palpation_oedema">
+                    <option value="">Select</option>
+                    <option value="pitting">Pitting</option>
+                    <option value="non_pitting">Non Pitting</option>
+                </select>
+            </label>
+            <label>Warmth
+                <textarea name="palpation_warmth" rows="2"></textarea>
+            </label>
+            <label>Crepitus
+                <textarea name="palpation_crepitus" rows="2"></textarea>
+            </label>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title"><h3>Examination</h3></div>
+        <div class="grid">
+            <label>ROM
+                <textarea name="examination_rom" rows="3"></textarea>
+            </label>
+            <label>Muscle Power
+                <textarea name="muscle_power" rows="2"></textarea>
+            </label>
+            <label>Muscle Bulk
+                <textarea name="muscle_bulk" rows="2"></textarea>
+            </label>
+            <label>Ligament Instability
+                <textarea name="ligament_instability" rows="2"></textarea>
+            </label>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title"><h3>Pain Areas</h3></div>
         <div class="card-grid">
             <?php foreach ($painByCategory as $category => $items): ?>
                 <label class="chip-select">
@@ -238,35 +261,42 @@ require __DIR__ . '/../layout/header.php';
         <?php endforeach; ?>
     </div>
 
-    <div class="grid">
-        <label>Pain Type
-            <input name="pain_type">
+    <div class="section-card">
+        <div class="section-title"><h3>Pain Details</h3></div>
+        <div class="grid">
+            <label>Pain Type
+                <input name="pain_type">
+            </label>
+            <label>Pain Site
+                <input name="pain_site">
+            </label>
+            <label>Pain Nature
+                <input name="pain_nature">
+            </label>
+            <label>Pain Scale (0-10)
+                <input type="number" name="pain_measurement" min="0" max="10">
+            </label>
+        </div>
+        <label>Aggravating Factors
+            <textarea name="pain_aggravating_factor" rows="2"></textarea>
         </label>
-        <label>Pain Site
-            <input name="pain_site">
+        <label>Relieving Factors
+            <textarea name="pain_relieving_factor" rows="2"></textarea>
         </label>
-        <label>Pain Nature
-            <input name="pain_nature">
-        </label>
-        <label>Pain Scale (0-10)
-            <input type="number" name="pain_measurement" min="0" max="10">
+        <label>Gait Assessment
+            <textarea name="gait_assessment" rows="2"></textarea>
         </label>
     </div>
-    <label>Aggravating Factors
-        <textarea name="pain_aggravating_factor" rows="2"></textarea>
-    </label>
-    <label>Relieving Factors
-        <textarea name="pain_relieving_factor" rows="2"></textarea>
-    </label>
-    <label>Gait Assessment
-        <textarea name="gait_assessment" rows="2"></textarea>
-    </label>
-    <label>Diagnosis
-        <textarea name="diagnosis" rows="2"></textarea>
-    </label>
-    <label>Treatment Goals
-        <textarea name="treatment_goals" rows="2"></textarea>
-    </label>
+
+    <div class="section-card">
+        <div class="section-title"><h3>Diagnosis &amp; Goals</h3></div>
+        <label>Diagnosis
+            <textarea name="diagnosis" rows="2"></textarea>
+        </label>
+        <label>Treatment Goals
+            <textarea name="treatment_goals" rows="2"></textarea>
+        </label>
+    </div>
 
     <button class="btn" type="submit">Open Case</button>
 </form>
