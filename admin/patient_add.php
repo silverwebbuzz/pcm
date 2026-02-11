@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $visitDate = $data['assessment_date'] ?: current_date();
             $stmt = $pdo->prepare('
-                INSERT INTO patient_visits (
+                INSERT INTO patient_cases (
                     patient_id, visit_date, chief_complain, history_present_illness, past_medical_history,
                     surgical_history, family_history, socio_economic_status, observation_built, observation_attitude_limb,
                     observation_posture, observation_deformity, aids_applications, gait, palpation_tenderness,
@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $selectedPain = $_POST['pain_subcategories'] ?? [];
             if (is_array($selectedPain) && count($selectedPain) > 0) {
-                $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, visit_id, pain_master_id) VALUES (?, ?, ?)');
+            $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, case_id, pain_master_id) VALUES (?, ?, ?)');
                 foreach ($selectedPain as $painId) {
                     $stmt->execute([$patientId, $visitId, (int) $painId]);
                 }

@@ -63,10 +63,13 @@ CREATE TABLE patients (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE TABLE patient_visits (
+CREATE TABLE patient_cases (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     visit_date DATE NOT NULL,
+    status ENUM('open','closed') NOT NULL DEFAULT 'open',
+    closed_at DATE NULL,
+    closed_notes TEXT,
     chief_complain TEXT,
     history_present_illness TEXT,
     past_medical_history TEXT,
@@ -104,7 +107,7 @@ CREATE TABLE patient_visits (
 CREATE TABLE treatment_plans (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
-    visit_id INT NULL,
+    case_id INT NULL,
     total_sessions INT NOT NULL,
     start_date DATE,
     status VARCHAR(30) DEFAULT 'active',
@@ -112,14 +115,14 @@ CREATE TABLE treatment_plans (
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
-    FOREIGN KEY (visit_id) REFERENCES patient_visits(id) ON DELETE SET NULL
+    FOREIGN KEY (case_id) REFERENCES patient_cases(id) ON DELETE SET NULL
 );
 
 CREATE TABLE sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
     treatment_plan_id INT NOT NULL,
-    visit_id INT NULL,
+    case_id INT NULL,
     session_date DATE NOT NULL,
     attendance ENUM('attended','missed','cancelled') DEFAULT 'attended',
     notes TEXT,
@@ -127,13 +130,13 @@ CREATE TABLE sessions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
     FOREIGN KEY (treatment_plan_id) REFERENCES treatment_plans(id) ON DELETE CASCADE,
-    FOREIGN KEY (visit_id) REFERENCES patient_visits(id) ON DELETE SET NULL
+    FOREIGN KEY (case_id) REFERENCES patient_cases(id) ON DELETE SET NULL
 );
 
 CREATE TABLE payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
-    visit_id INT NULL,
+    case_id INT NULL,
     amount DECIMAL(10,2) NOT NULL,
     payment_date DATE NOT NULL,
     method VARCHAR(50),
@@ -142,7 +145,7 @@ CREATE TABLE payments (
     created_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
-    FOREIGN KEY (visit_id) REFERENCES patient_visits(id) ON DELETE SET NULL
+    FOREIGN KEY (case_id) REFERENCES patient_cases(id) ON DELETE SET NULL
 );
 
 CREATE TABLE patient_documents (
@@ -158,10 +161,12 @@ CREATE TABLE patient_documents (
 CREATE TABLE patient_assignments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
+    case_id INT NOT NULL,
     sub_doctor_id INT NOT NULL,
     assigned_by INT NULL,
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
+    FOREIGN KEY (case_id) REFERENCES patient_cases(id) ON DELETE CASCADE,
     FOREIGN KEY (sub_doctor_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -176,11 +181,11 @@ CREATE TABLE pain_master (
 CREATE TABLE patient_pain (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
-    visit_id INT NOT NULL,
+    case_id INT NOT NULL,
     pain_master_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
-    FOREIGN KEY (visit_id) REFERENCES patient_visits(id) ON DELETE CASCADE,
+    FOREIGN KEY (case_id) REFERENCES patient_cases(id) ON DELETE CASCADE,
     FOREIGN KEY (pain_master_id) REFERENCES pain_master(id) ON DELETE CASCADE
 );
 
@@ -262,3 +267,235 @@ INSERT INTO pain_master (category, subcategory, is_other) VALUES
 ('Ankle & Foot','Gout',0),
 ('Ankle & Foot','Tarsal tunnel syndrome',0),
 ('Ankle & Foot','Other',1);
+
+-- Dummy patients with multiple cases (last case open)
+INSERT INTO patients (
+    id, first_name, last_name, age, gender, dob, occupation, assessment_date, dominance, condition_duration,
+    phone, address, emergency_contact, chief_complain, diagnosis, treatment_goals, created_by
+) VALUES
+(1,'Aarav','Shah',32,'Male','1992-04-12','Engineer','2024-06-15','Right','6 weeks','9000000001','City A','Emergency 9000001001','Shoulder pain','Impingement syndrome','Improve mobility and strength',1),
+(2,'Meera','Joshi',35,'Female','1989-11-03','Teacher','2024-08-02','Right','3 months','9000000002','City B','Emergency 9000001002','Knee pain','Knee OA','Strengthen quads',1),
+(3,'Rohan','Patel',29,'Male','1995-06-21','Designer','2024-09-10','Right','2 months','9000000003','City C','Emergency 9000001003','Hand numbness','Carpal tunnel syndrome','Reduce nerve compression',1),
+(4,'Anaya','Gupta',33,'Female','1991-02-18','Accountant','2024-12-05','Right','4 weeks','9000000004','City D','Emergency 9000001004','Neck stiffness','Cervical spondylosis','Posture correction',1),
+(5,'Kunal','Mehta',37,'Male','1987-09-30','Sales','2024-11-05','Right','3 weeks','9000000005','City E','Emergency 9000001005','Ankle pain','Ankle sprain','Stability training',1),
+(6,'Pooja','Nair',31,'Female','1993-07-08','Nurse','2024-12-20','Right','2 weeks','9000000006','City F','Emergency 9000001006','Neck pain','Cervical spondylosis','Mobility exercises',1),
+(7,'Vikram','Rao',39,'Male','1985-12-14','Driver','2024-07-25','Right','5 weeks','9000000007','City G','Emergency 9000001007','Back pain','Muscle strain','Pain relief',1),
+(8,'Isha','Khan',28,'Female','1996-03-27','Student','2024-09-12','Right','6 weeks','9000000008','City H','Emergency 9000001008','Shoulder pain','Frozen shoulder','Increase ROM',1),
+(9,'Neha','Singh',34,'Female','1990-10-05','HR','2024-10-10','Right','4 weeks','9000000009','City I','Emergency 9000001009','Neck pain','Cervical spondylosis','ROM exercises',1),
+(10,'Arjun','Verma',36,'Male','1988-01-25','Manager','2024-08-22','Right','5 weeks','9000000010','City J','Emergency 9000001010','Hand pain','Arthritis','Improve function',1);
+
+INSERT INTO patient_cases (
+    id, patient_id, visit_date, status, closed_at, closed_notes,
+    chief_complain, pain_type, pain_site, pain_nature, pain_aggravating_factor,
+    pain_relieving_factor, pain_measurement, diagnosis, treatment_goals, created_by
+) VALUES
+(1,1,'2023-01-10','closed','2023-02-05','Completed sessions','Neck pain','Mechanical','Neck','Dull','Long sitting','Rest',5,'Cervical spondylosis','Reduce pain and improve ROM',1),
+(2,1,'2024-06-15','open',NULL,NULL,'Shoulder pain','Inflammatory','Shoulder','Sharp','Overhead activity','Ice',6,'Impingement syndrome','Improve mobility and strength',1),
+(3,2,'2023-03-20','closed','2023-04-15','Case closed','Elbow pain','Mechanical','Elbow','Aching','Repetitive use','Rest',4,'Tennis elbow','Reduce pain and inflammation',1),
+(4,2,'2024-08-02','open',NULL,NULL,'Knee pain','Degenerative','Knee','Aching','Stairs','Ice',6,'Knee OA','Strengthen quads',1),
+(5,3,'2023-05-12','closed','2023-06-01','Recovered','Back pain','Mechanical','Lower back','Dull','Bending','Heat',5,'Herniated disc','Core stability',1),
+(6,3,'2024-09-10','open',NULL,NULL,'Hand numbness','Neuropathic','Wrist','Tingling','Typing','Wrist splint',7,'Carpal tunnel syndrome','Reduce nerve compression',1),
+(7,4,'2022-11-01','closed','2022-11-25','Closed','Hip pain','Degenerative','Hip','Aching','Walking','Rest',5,'Hip arthritis','Improve gait',1),
+(8,4,'2024-12-05','open',NULL,NULL,'Neck stiffness','Mechanical','Neck','Stiff','Sleeping posture','Stretching',4,'Cervical spondylosis','Posture correction',1),
+(9,5,'2023-07-14','closed','2023-08-10','Closed','Shoulder pain','Mechanical','Shoulder','Sharp','Lifting','Ice',6,'Rotator cuff injuries','Improve strength',1),
+(10,5,'2024-01-20','closed','2024-02-15','Closed','Elbow pain','Mechanical','Elbow','Aching','Sports','Rest',4,'Golfer''s elbow','Reduce pain',1),
+(11,5,'2024-11-05','open',NULL,NULL,'Ankle pain','Trauma','Ankle','Sharp','Running','Rest',6,'Ankle sprain','Stability training',1),
+(12,6,'2023-02-18','closed','2023-03-10','Closed','Back pain','Mechanical','Back','Dull','Sitting','Heat',5,'Spondylosis','Core strength',1),
+(13,6,'2024-03-22','open',NULL,NULL,'Knee pain','Inflammatory','Knee','Sharp','Stairs','Ice',6,'Meniscus tear','Reduce swelling',1),
+(14,7,'2022-09-08','closed','2022-10-01','Closed','Hand pain','Inflammatory','Hand','Stiff','Grip','Rest',4,'Trigger finger','Improve movement',1),
+(15,7,'2023-12-18','closed','2024-01-10','Closed','Neck pain','Mechanical','Neck','Aching','Desk work','Stretching',5,'Degenerative disc disease','Posture correction',1),
+(16,7,'2024-07-25','open',NULL,NULL,'Back pain','Mechanical','Back','Sharp','Lifting','Heat',6,'Muscle strain','Pain relief',1),
+(17,8,'2023-04-01','closed','2023-04-25','Closed','Hip pain','Degenerative','Hip','Aching','Walking','Rest',5,'Bursitis','Reduce inflammation',1),
+(18,8,'2024-09-12','open',NULL,NULL,'Shoulder pain','Mechanical','Shoulder','Sharp','Overhead activity','Ice',6,'Frozen shoulder','Increase ROM',1),
+(19,9,'2023-06-05','closed','2023-07-01','Closed','Ankle pain','Trauma','Ankle','Sharp','Running','Rest',6,'Fracture','Healing support',1),
+(20,9,'2024-02-15','closed','2024-03-10','Closed','Back pain','Mechanical','Back','Dull','Bending','Heat',5,'Scoliosis','Posture correction',1),
+(21,9,'2024-10-10','open',NULL,NULL,'Neck pain','Mechanical','Neck','Stiff','Desk work','Stretching',4,'Cervical spondylosis','ROM exercises',1),
+(22,10,'2023-01-30','closed','2023-02-20','Closed','Knee pain','Mechanical','Knee','Aching','Stairs','Ice',5,'Ligament injury (ACL/PCL/MCL/LCL)','Stability training',1),
+(23,10,'2023-10-10','closed','2023-11-01','Closed','Back pain','Mechanical','Back','Dull','Sitting','Heat',5,'Spondylosis','Core strength',1),
+(24,10,'2024-08-22','open',NULL,NULL,'Hand pain','Inflammatory','Hand','Stiff','Grip','Rest',4,'Arthritis','Improve function',1),
+(25,6,'2024-12-20','open',NULL,NULL,'Neck pain','Mechanical','Neck','Stiff','Sleep posture','Stretching',4,'Cervical spondylosis','Mobility exercises',1);
+
+UPDATE patient_cases
+SET history_present_illness = CONCAT('Patient reports gradual onset of symptoms for case #', id, '.'),
+    past_medical_history = 'No major chronic illness reported.',
+    surgical_history = 'No prior surgeries reported.',
+    family_history = 'No significant family history.',
+    socio_economic_status = 'Middle',
+    observation_built = 'Average build, well nourished.',
+    observation_attitude_limb = 'Mild guarding noted.',
+    observation_posture = 'Slight forward posture.',
+    observation_deformity = 'No visible deformity.',
+    aids_applications = 'No assistive devices used.',
+    gait = 'Antalgic gait pattern.',
+    palpation_tenderness = 'Localized tenderness present.',
+    palpation_oedema = 'pitting',
+    palpation_warmth = 'Mild warmth noted.',
+    palpation_crepitus = 'No crepitus detected.',
+    examination_rom = 'ROM mildly restricted with discomfort.',
+    muscle_power = '4/5',
+    muscle_bulk = 'Normal bulk.',
+    ligament_instability = 'Negative.',
+    gait_assessment = 'Mild gait deviation observed.'
+WHERE id BETWEEN 1 AND 25;
+
+UPDATE patients
+SET history_present_illness = 'Initial patient assessment recorded.',
+    past_medical_history = 'No major chronic illness reported.',
+    surgical_history = 'No prior surgeries reported.',
+    family_history = 'No significant family history.',
+    socio_economic_status = 'Middle',
+    observation_built = 'Average build, well nourished.',
+    observation_attitude_limb = 'Mild guarding noted.',
+    observation_posture = 'Slight forward posture.',
+    observation_deformity = 'No visible deformity.',
+    aids_applications = 'No assistive devices used.',
+    gait = 'Antalgic gait pattern.',
+    palpation_tenderness = 'Localized tenderness present.',
+    palpation_oedema = 'pitting',
+    palpation_warmth = 'Mild warmth noted.',
+    palpation_crepitus = 'No crepitus detected.',
+    examination_rom = 'ROM mildly restricted with discomfort.',
+    muscle_power = '4/5',
+    muscle_bulk = 'Normal bulk.',
+    ligament_instability = 'Negative.',
+    pain_type = 'Mechanical',
+    pain_site = 'Primary pain site',
+    pain_nature = 'Dull ache',
+    pain_aggravating_factor = 'Activity',
+    pain_relieving_factor = 'Rest',
+    pain_measurement = 5,
+    gait_assessment = 'Mild gait deviation observed.'
+WHERE id BETWEEN 1 AND 10;
+
+INSERT INTO treatment_plans (id, patient_id, case_id, total_sessions, start_date, status, notes, created_by) VALUES
+(1,1,1,15,'2023-01-10','completed','Completed rehab',1),
+(2,1,2,12,'2024-06-15','active','Ongoing',1),
+(3,2,3,10,'2023-03-20','completed','Closed',1),
+(4,2,4,12,'2024-08-02','active','Ongoing',1),
+(5,3,5,10,'2023-05-12','completed','Closed',1),
+(6,3,6,12,'2024-09-10','active','Ongoing',1),
+(7,4,7,10,'2022-11-01','completed','Closed',1),
+(8,4,8,12,'2024-12-05','active','Ongoing',1),
+(9,5,9,10,'2023-07-14','completed','Closed',1),
+(10,5,10,8,'2024-01-20','completed','Closed',1),
+(11,5,11,12,'2024-11-05','active','Ongoing',1),
+(12,6,12,10,'2023-02-18','completed','Closed',1),
+(13,6,13,12,'2024-03-22','active','Ongoing',1),
+(14,7,14,8,'2022-09-08','completed','Closed',1),
+(15,7,15,10,'2023-12-18','completed','Closed',1),
+(16,7,16,12,'2024-07-25','active','Ongoing',1),
+(17,8,17,8,'2023-04-01','completed','Closed',1),
+(18,8,18,12,'2024-09-12','active','Ongoing',1),
+(19,9,19,8,'2023-06-05','completed','Closed',1),
+(20,9,20,10,'2024-02-15','completed','Closed',1),
+(21,9,21,12,'2024-10-10','active','Ongoing',1),
+(22,10,22,10,'2023-01-30','completed','Closed',1),
+(23,10,23,8,'2023-10-10','completed','Closed',1),
+(24,10,24,12,'2024-08-22','active','Ongoing',1),
+(25,6,25,12,'2024-12-20','active','Ongoing',1);
+
+INSERT INTO sessions (id, patient_id, treatment_plan_id, case_id, session_date, attendance, notes, created_by) VALUES
+(1,1,1,1,'2023-01-12','attended','Initial session',1),
+(2,1,1,1,'2023-01-15','attended','Mobility work',1),
+(3,1,2,2,'2024-06-17','attended','Pain control',1),
+(4,1,2,2,'2024-06-20','attended','Strengthening',1),
+(5,2,3,3,'2023-03-22','attended','Elbow therapy',1),
+(6,2,3,3,'2023-03-26','attended','Progressing',1),
+(7,2,4,4,'2024-08-05','attended','Knee rehab',1),
+(8,2,4,4,'2024-08-08','attended','Progressing',1),
+(9,3,5,5,'2023-05-15','attended','Back care',1),
+(10,3,5,5,'2023-05-18','attended','Core work',1),
+(11,3,6,6,'2024-09-12','attended','Wrist care',1),
+(12,3,6,6,'2024-09-15','attended','Nerve glide',1),
+(13,4,7,7,'2022-11-03','attended','Hip rehab',1),
+(14,4,7,7,'2022-11-06','attended','Strengthening',1),
+(15,4,8,8,'2024-12-07','attended','Neck mobility',1),
+(16,4,8,8,'2024-12-10','attended','Posture',1),
+(17,5,9,9,'2023-07-16','attended','Shoulder care',1),
+(18,5,9,9,'2023-07-20','attended','Strengthening',1),
+(19,5,10,10,'2024-01-22','attended','Elbow care',1),
+(20,5,10,10,'2024-01-25','attended','Stretching',1),
+(21,5,11,11,'2024-11-07','attended','Ankle rehab',1),
+(22,5,11,11,'2024-11-10','attended','Balance work',1),
+(23,6,12,12,'2023-02-20','attended','Back care',1),
+(24,6,12,12,'2023-02-24','attended','Core work',1),
+(25,6,13,13,'2024-03-25','attended','Knee care',1),
+(26,6,13,13,'2024-03-28','attended','Progressing',1),
+(27,7,14,14,'2022-09-10','attended','Hand care',1),
+(28,7,14,14,'2022-09-13','attended','Mobility',1),
+(29,7,15,15,'2023-12-20','attended','Neck care',1),
+(30,7,15,15,'2023-12-24','attended','Posture',1),
+(31,7,16,16,'2024-07-28','attended','Back care',1),
+(32,7,16,16,'2024-08-02','attended','Strengthening',1),
+(33,8,17,17,'2023-04-03','attended','Hip care',1),
+(34,8,17,17,'2023-04-07','attended','Strengthening',1),
+(35,8,18,18,'2024-09-15','attended','Shoulder care',1),
+(36,8,18,18,'2024-09-18','attended','ROM',1),
+(37,9,19,19,'2023-06-07','attended','Ankle care',1),
+(38,9,19,19,'2023-06-10','attended','Strengthening',1),
+(39,9,20,20,'2024-02-18','attended','Back care',1),
+(40,9,20,20,'2024-02-22','attended','Posture',1),
+(41,9,21,21,'2024-10-12','attended','Neck care',1),
+(42,9,21,21,'2024-10-15','attended','Mobility',1),
+(43,10,22,22,'2023-02-01','attended','Knee care',1),
+(44,10,22,22,'2023-02-05','attended','Strengthening',1),
+(45,10,23,23,'2023-10-12','attended','Back care',1),
+(46,10,23,23,'2023-10-15','attended','Posture',1),
+(47,10,24,24,'2024-08-24','attended','Hand care',1),
+(48,10,24,24,'2024-08-27','attended','Mobility',1),
+(49,6,25,25,'2024-12-22','attended','Neck care',1),
+(50,6,25,25,'2024-12-26','attended','Mobility',1);
+
+INSERT INTO payments (id, patient_id, case_id, amount, payment_date, method, notes, receipt_no, created_by) VALUES
+(1,1,1,1500,'2023-01-12','Cash','Initial payment','RCPT-C1',1),
+(2,1,2,1800,'2024-06-17','UPI','Case payment','RCPT-C2',1),
+(3,2,3,1200,'2023-03-22','Cash','Case payment','RCPT-C3',1),
+(4,2,4,1600,'2024-08-05','UPI','Case payment','RCPT-C4',1),
+(5,3,5,1300,'2023-05-15','Cash','Case payment','RCPT-C5',1),
+(6,3,6,1700,'2024-09-12','UPI','Case payment','RCPT-C6',1),
+(7,4,7,1100,'2022-11-03','Cash','Case payment','RCPT-C7',1),
+(8,4,8,1500,'2024-12-07','UPI','Case payment','RCPT-C8',1),
+(9,5,9,1400,'2023-07-16','Cash','Case payment','RCPT-C9',1),
+(10,5,10,1000,'2024-01-22','Cash','Case payment','RCPT-C10',1),
+(11,5,11,1600,'2024-11-07','UPI','Case payment','RCPT-C11',1),
+(12,6,12,1200,'2023-02-20','Cash','Case payment','RCPT-C12',1),
+(13,6,13,1600,'2024-03-25','UPI','Case payment','RCPT-C13',1),
+(14,7,14,900,'2022-09-10','Cash','Case payment','RCPT-C14',1),
+(15,7,15,1200,'2023-12-20','Cash','Case payment','RCPT-C15',1),
+(16,7,16,1500,'2024-07-28','UPI','Case payment','RCPT-C16',1),
+(17,8,17,1100,'2023-04-03','Cash','Case payment','RCPT-C17',1),
+(18,8,18,1500,'2024-09-15','UPI','Case payment','RCPT-C18',1),
+(19,9,19,1200,'2023-06-07','Cash','Case payment','RCPT-C19',1),
+(20,9,20,1300,'2024-02-18','Cash','Case payment','RCPT-C20',1),
+(21,9,21,1600,'2024-10-12','UPI','Case payment','RCPT-C21',1),
+(22,10,22,1300,'2023-02-01','Cash','Case payment','RCPT-C22',1),
+(23,10,23,1100,'2023-10-12','Cash','Case payment','RCPT-C23',1),
+(24,10,24,1500,'2024-08-24','UPI','Case payment','RCPT-C24',1),
+(25,6,25,1600,'2024-12-22','UPI','Case payment','RCPT-C25',1);
+
+INSERT INTO patient_pain (patient_id, case_id, pain_master_id) VALUES
+(1,1,(SELECT id FROM pain_master WHERE category='Neck' AND subcategory='Cervical spondylosis' LIMIT 1)),
+(1,2,(SELECT id FROM pain_master WHERE category='Shoulder' AND subcategory='Impingement syndrome' LIMIT 1)),
+(2,3,(SELECT id FROM pain_master WHERE category='Elbow' AND subcategory='Tennis elbow' LIMIT 1)),
+(2,4,(SELECT id FROM pain_master WHERE category='Knee' AND subcategory='Arthritis' LIMIT 1)),
+(3,5,(SELECT id FROM pain_master WHERE category='Back' AND subcategory='Herniated disc' LIMIT 1)),
+(3,6,(SELECT id FROM pain_master WHERE category='Hand' AND subcategory='Carpal tunnel syndrome' LIMIT 1)),
+(4,7,(SELECT id FROM pain_master WHERE category='Hip' AND subcategory='Arthritis' LIMIT 1)),
+(4,8,(SELECT id FROM pain_master WHERE category='Neck' AND subcategory='Cervical spondylosis' LIMIT 1)),
+(5,9,(SELECT id FROM pain_master WHERE category='Shoulder' AND subcategory='Rotator cuff injuries' LIMIT 1)),
+(5,10,(SELECT id FROM pain_master WHERE category='Elbow' AND subcategory='Golfer''s elbow' LIMIT 1)),
+(5,11,(SELECT id FROM pain_master WHERE category='Ankle & Foot' AND subcategory='Ankle sprain' LIMIT 1)),
+(6,12,(SELECT id FROM pain_master WHERE category='Back' AND subcategory='Spondylosis' LIMIT 1)),
+(6,13,(SELECT id FROM pain_master WHERE category='Knee' AND subcategory='Meniscus tear' LIMIT 1)),
+(7,14,(SELECT id FROM pain_master WHERE category='Hand' AND subcategory='Trigger finger' LIMIT 1)),
+(7,15,(SELECT id FROM pain_master WHERE category='Neck' AND subcategory='Degenerative disc disease' LIMIT 1)),
+(7,16,(SELECT id FROM pain_master WHERE category='Back' AND subcategory='Muscle strain / ligament sprain' LIMIT 1)),
+(8,17,(SELECT id FROM pain_master WHERE category='Hip' AND subcategory='Bursitis' LIMIT 1)),
+(8,18,(SELECT id FROM pain_master WHERE category='Shoulder' AND subcategory='Frozen shoulder' LIMIT 1)),
+(9,19,(SELECT id FROM pain_master WHERE category='Ankle & Foot' AND subcategory='Fracture' LIMIT 1)),
+(9,20,(SELECT id FROM pain_master WHERE category='Back' AND subcategory='Scoliosis / kyphosis' LIMIT 1)),
+(9,21,(SELECT id FROM pain_master WHERE category='Neck' AND subcategory='Cervical spondylosis' LIMIT 1)),
+(10,22,(SELECT id FROM pain_master WHERE category='Knee' AND subcategory='Ligament injury (ACL/PCL/MCL/LCL)' LIMIT 1)),
+(10,23,(SELECT id FROM pain_master WHERE category='Back' AND subcategory='Spondylosis' LIMIT 1)),
+(10,24,(SELECT id FROM pain_master WHERE category='Hand' AND subcategory='Arthritis' LIMIT 1)),
+(6,25,(SELECT id FROM pain_master WHERE category='Neck' AND subcategory='Cervical spondylosis' LIMIT 1));

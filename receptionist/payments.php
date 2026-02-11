@@ -13,9 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = trim($_POST['method'] ?? '');
     $notes = trim($_POST['notes'] ?? '');
     $receiptNo = 'RCPT-' . strtoupper(substr(md5(uniqid('', true)), 0, 8));
-    $visitId = $patientId ? latest_visit_id($patientId) : null;
-    $stmt = $pdo->prepare('INSERT INTO payments (patient_id, visit_id, amount, payment_date, method, notes, receipt_no, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-    $stmt->execute([$patientId, $visitId, $amount, $date, $method, $notes, $receiptNo, current_user()['id']]);
+    $caseId = $patientId ? latest_case_id($patientId) : null;
+    $stmt = $pdo->prepare('INSERT INTO payments (patient_id, case_id, amount, payment_date, method, notes, receipt_no, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt->execute([$patientId, $caseId, $amount, $date, $method, $notes, $receiptNo, current_user()['id']]);
 }
 
 $patients = $pdo->query('SELECT id, first_name, last_name FROM patients ORDER BY first_name')->fetchAll();

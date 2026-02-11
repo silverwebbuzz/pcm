@@ -14,7 +14,63 @@ if (!$patient) {
     redirect('admin/patients.php');
 }
 
-$currentVisitId = latest_visit_id($id);
+$currentVisitId = latest_case_id($id);
+
+// Close current case
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['close_case'])) {
+    if ($currentVisitId) {
+        $notes = trim($_POST['closed_notes'] ?? '');
+        $stmt = $pdo->prepare("UPDATE patient_cases SET status = 'closed', closed_at = ?, closed_notes = ? WHERE id = ?");
+        $stmt->execute([current_date(), $notes, $currentVisitId]);
+        $currentVisitId = latest_case_id($id);
+    }
+}
+
+// Open new case
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['open_case'])) {
+    $visitDate = $_POST['visit_date'] ?? current_date();
+    $chief = trim($_POST['case_chief_complain'] ?? '');
+    $diagnosis = trim($_POST['case_diagnosis'] ?? '');
+    $goals = trim($_POST['case_treatment_goals'] ?? '');
+    $painType = trim($_POST['case_pain_type'] ?? '');
+    $painSite = trim($_POST['case_pain_site'] ?? '');
+    $painNature = trim($_POST['case_pain_nature'] ?? '');
+    $aggravating = trim($_POST['case_pain_aggravating_factor'] ?? '');
+    $relieving = trim($_POST['case_pain_relieving_factor'] ?? '');
+    $painMeasurement = $_POST['case_pain_measurement'] !== '' ? (int) $_POST['case_pain_measurement'] : null;
+    $duration = trim($_POST['case_condition_duration'] ?? '');
+    $stmt = $pdo->prepare('
+        INSERT INTO patient_cases (
+            patient_id, visit_date, chief_complain, pain_type, pain_site, pain_nature,
+            pain_aggravating_factor, pain_relieving_factor, pain_measurement,
+            diagnosis, treatment_goals, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ');
+    $stmt->execute([
+        $id,
+        $visitDate,
+        $chief,
+        $painType,
+        $painSite,
+        $painNature,
+        $aggravating,
+        $relieving,
+        $painMeasurement,
+        $diagnosis,
+        $goals,
+        current_user()['id'],
+    ]);
+    $newVisitId = (int) $pdo->lastInsertId();
+
+    $selectedPain = $_POST['pain_subcategories'] ?? [];
+    if (is_array($selectedPain) && count($selectedPain) > 0) {
+    $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, case_id, pain_master_id) VALUES (?, ?, ?)');
+        foreach ($selectedPain as $painId) {
+            $stmt->execute([$id, $newVisitId, (int) $painId]);
+        }
+    }
+    $currentVisitId = $newVisitId;
+}
 
 // Quick add session notes
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['quick_session'])) {
@@ -22,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['quick_session'])) {
     $date = $_POST['session_date'] ?? current_date();
     $attendance = $_POST['attendance'] ?? 'attended';
     $notes = trim($_POST['notes'] ?? '');
-    $stmt = $pdo->prepare('INSERT INTO sessions (patient_id, treatment_plan_id, visit_id, session_date, attendance, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO sessions (patient_id, treatment_plan_id, case_id, session_date, attendance, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute([$id, $planId, $currentVisitId, $date, $attendance, $notes, current_user()['id']]);
 }
 
@@ -47,15 +103,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_document'])) {
     }
 }
 
-$plans = $pdo->prepare('SELECT * FROM treatment_plans WHERE patient_id = ? AND (visit_id = ? OR ? IS NULL) ORDER BY created_at DESC');
+$plans = $pdo->prepare('SELECT * FROM treatment_plans WHERE patient_id = ? AND (case_id = ? OR ? IS NULL) ORDER BY created_at DESC');
 $plans->execute([$id, $currentVisitId, $currentVisitId]);
 $plans = $plans->fetchAll();
 
-$sessions = $pdo->prepare('SELECT * FROM sessions WHERE patient_id = ? AND (visit_id = ? OR ? IS NULL) ORDER BY session_date DESC');
+$sessions = $pdo->prepare('SELECT * FROM sessions WHERE patient_id = ? AND (case_id = ? OR ? IS NULL) ORDER BY session_date DESC');
 $sessions->execute([$id, $currentVisitId, $currentVisitId]);
 $sessions = $sessions->fetchAll();
 
-$payments = $pdo->prepare('SELECT * FROM payments WHERE patient_id = ? AND (visit_id = ? OR ? IS NULL) ORDER BY payment_date DESC');
+$payments = $pdo->prepare('SELECT * FROM payments WHERE patient_id = ? AND (case_id = ? OR ? IS NULL) ORDER BY payment_date DESC');
 $payments->execute([$id, $currentVisitId, $currentVisitId]);
 $payments = $payments->fetchAll();
 
@@ -70,15 +126,21 @@ if (!empty($patient['user_id'])) {
     $patientEmail = (string) $stmt->fetchColumn();
 }
 
-$visitsStmt = $pdo->prepare('SELECT id, visit_date, chief_complain, diagnosis, created_at FROM patient_visits WHERE patient_id = ? ORDER BY created_at DESC');
+$visitsStmt = $pdo->prepare('SELECT id, visit_date, chief_complain, diagnosis, status, closed_at, created_at FROM patient_cases WHERE patient_id = ? ORDER BY created_at DESC');
 $visitsStmt->execute([$id]);
 $visits = $visitsStmt->fetchAll();
+
+$painMasterRows = $pdo->query("SELECT id, category, subcategory FROM pain_master WHERE active = 1 ORDER BY category, subcategory")->fetchAll();
+$painMasterByCategory = [];
+foreach ($painMasterRows as $row) {
+    $painMasterByCategory[$row['category']][] = $row;
+}
 
 $painStmt = $pdo->prepare('
     SELECT pm.category, pm.subcategory
     FROM patient_pain pp
     JOIN pain_master pm ON pm.id = pp.pain_master_id
-    WHERE pp.patient_id = ? AND pp.visit_id = ?
+    WHERE pp.patient_id = ? AND pp.case_id = ?
     ORDER BY pm.category, pm.subcategory
 ');
 $painStmt->execute([$id, $currentVisitId ?: 0]);
@@ -94,7 +156,13 @@ require __DIR__ . '/../layout/header.php';
     $initials = strtoupper(substr($patient['first_name'], 0, 1) . substr($patient['last_name'], 0, 1));
     $completedSessions = count($sessions);
     $totalPlanSessions = $plans[0]['total_sessions'] ?? 0;
-    $painValue = $patient['pain_measurement'] !== null ? (int) $patient['pain_measurement'] : null;
+    $visitPain = $painValue;
+    if ($currentVisitId) {
+        $visitPainStmt = $pdo->prepare('SELECT pain_measurement FROM patient_cases WHERE id = ?');
+        $visitPainStmt->execute([$currentVisitId]);
+        $visitPain = $visitPainStmt->fetchColumn();
+    }
+    $painValue = $visitPain !== null ? (int) $visitPain : null;
 ?>
 
 <div class="page-header">
@@ -138,24 +206,124 @@ require __DIR__ . '/../layout/header.php';
 <div class="section-card" style="margin-top:16px;">
     <div class="page-header">
         <h3>Visit History</h3>
-        <a class="btn" href="patient_edit.php?id=<?php echo $patient['id']; ?>">Add New Visit</a>
+        <div class="form-actions">
+            <?php if ($currentVisitId): ?>
+                <form method="post" style="display:inline;">
+                    <input type="hidden" name="close_case" value="1">
+                    <input type="text" name="closed_notes" placeholder="Close notes (optional)">
+                    <button class="btn secondary" type="submit">Close Current Case</button>
+                </form>
+            <?php endif; ?>
+        </div>
     </div>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Date</th><th>Chief Complaint</th><th>Diagnosis</th><th>Latest</th></tr></thead>
+            <thead><tr><th>Date</th><th>Chief Complaint</th><th>Diagnosis</th><th>Status</th><th>Closed</th></tr></thead>
             <tbody>
             <?php foreach ($visits as $visit): ?>
                 <tr>
                     <td><?php echo e($visit['visit_date']); ?></td>
                     <td><?php echo e($visit['chief_complain']); ?></td>
                     <td><?php echo e($visit['diagnosis']); ?></td>
-                    <td><?php echo (int) $visit['id'] === (int) $currentVisitId ? 'Yes' : ''; ?></td>
+                    <td><?php echo e($visit['status']); ?></td>
+                    <td><?php echo e($visit['closed_at']); ?></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 </div>
+
+<div class="section-card" style="margin-top:16px;">
+    <h3>Open New Case</h3>
+    <form method="post">
+        <input type="hidden" name="open_case" value="1">
+        <div class="card-grid">
+            <label>Visit Date
+                <input type="date" name="visit_date" value="<?php echo current_date(); ?>">
+            </label>
+            <label>Duration of Condition
+                <input name="case_condition_duration">
+            </label>
+        </div>
+        <label>Chief Complaint
+            <textarea name="case_chief_complain" rows="2"></textarea>
+        </label>
+        <div class="section-card">
+            <div class="info-label">Pain Areas</div>
+            <div class="card-grid">
+                <?php foreach ($painMasterByCategory as $category => $items): ?>
+                    <label class="chip-select">
+                        <input type="checkbox" name="pain_categories[]" value="<?php echo e($category); ?>">
+                        <?php echo e($category); ?>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+            <?php foreach ($painMasterByCategory as $category => $items): ?>
+                <div class="subcategory-group" data-category="<?php echo e($category); ?>" style="display:none; margin-top:10px;">
+                    <div class="info-label"><?php echo e($category); ?> Subcategories</div>
+                    <div class="card-grid">
+                        <?php foreach ($items as $item): ?>
+                            <label class="chip-select">
+                                <input type="checkbox" name="pain_subcategories[]" value="<?php echo (int) $item['id']; ?>">
+                                <?php echo e($item['subcategory']); ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="card-grid">
+            <label>Pain Type
+                <input name="case_pain_type">
+            </label>
+            <label>Pain Site
+                <input name="case_pain_site">
+            </label>
+            <label>Pain Nature
+                <input name="case_pain_nature">
+            </label>
+            <label>Pain Scale (0-10)
+                <input type="number" name="case_pain_measurement" min="0" max="10">
+            </label>
+        </div>
+        <label>Aggravating Factors
+            <textarea name="case_pain_aggravating_factor" rows="2"></textarea>
+        </label>
+        <label>Relieving Factors
+            <textarea name="case_pain_relieving_factor" rows="2"></textarea>
+        </label>
+        <label>Diagnosis
+            <textarea name="case_diagnosis" rows="2"></textarea>
+        </label>
+        <label>Treatment Goals
+            <textarea name="case_treatment_goals" rows="2"></textarea>
+        </label>
+        <div class="form-actions">
+            <button class="btn" type="submit">Open Case</button>
+        </div>
+    </form>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var categoryInputs = document.querySelectorAll('input[name="pain_categories[]"]');
+    var groups = document.querySelectorAll('.subcategory-group');
+    function toggleGroups() {
+        groups.forEach(function (group) {
+            var category = group.getAttribute('data-category');
+            var checked = false;
+            categoryInputs.forEach(function (input) {
+                if (input.value === category && input.checked) checked = true;
+            });
+            group.style.display = checked ? 'block' : 'none';
+        });
+    }
+    categoryInputs.forEach(function (input) {
+        input.addEventListener('change', toggleGroups);
+    });
+    toggleGroups();
+});
+</script>
 
 <div class="section-card section-title">
     <h3>Patient Demographics</h3>

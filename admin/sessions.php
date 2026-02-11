@@ -12,9 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = $_POST['session_date'] ?? current_date();
     $attendance = $_POST['attendance'] ?? 'attended';
     $notes = trim($_POST['notes'] ?? '');
-    $visitId = $patientId ? latest_visit_id($patientId) : null;
-    $pdo->prepare('INSERT INTO sessions (patient_id, treatment_plan_id, visit_id, session_date, attendance, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)')
-        ->execute([$patientId, $planId, $visitId, $date, $attendance, $notes, current_user()['id']]);
+    $caseId = $patientId ? latest_case_id($patientId) : null;
+    $pdo->prepare('INSERT INTO sessions (patient_id, treatment_plan_id, case_id, session_date, attendance, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        ->execute([$patientId, $planId, $caseId, $date, $attendance, $notes, current_user()['id']]);
 }
 
 $patients = $pdo->query('SELECT id, first_name, last_name FROM patients ORDER BY first_name')->fetchAll();

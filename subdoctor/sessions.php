@@ -5,61 +5,62 @@ require_login();
 require_role(['sub_doctor']);
 
 $pdo = db();
-$patientId = (int) ($_GET['patient_id'] ?? 0);
+$caseId = (int) ($_GET['case_id'] ?? 0);
 $editSessionId = (int) ($_GET['edit'] ?? 0);
 $editSession = null;
 $userId = current_user()['id'];
 
-$assignedPatients = $pdo->prepare('
-    SELECT p.id, p.first_name, p.last_name
+$assignedCases = $pdo->prepare('
+    SELECT pa.case_id, p.id AS patient_id, p.first_name, p.last_name, pc.visit_date, pc.chief_complain
     FROM patient_assignments pa
     JOIN patients p ON p.id = pa.patient_id
-    WHERE pa.sub_doctor_id = ?
-    ORDER BY p.first_name
+    JOIN patient_cases pc ON pc.id = pa.case_id
+    WHERE pa.sub_doctor_id = ? AND pc.status = "open"
+    ORDER BY pc.visit_date DESC
 ');
-$assignedPatients->execute([$userId]);
-$patients = $assignedPatients->fetchAll();
+$assignedCases->execute([$userId]);
+$cases = $assignedCases->fetchAll();
 
 if ($editSessionId) {
     $stmt = $pdo->prepare('SELECT * FROM sessions WHERE id = ? AND created_by = ?');
     $stmt->execute([$editSessionId, $userId]);
     $editSession = $stmt->fetch();
     if ($editSession) {
-        $patientId = (int) $editSession['patient_id'];
+        $caseId = (int) $editSession['case_id'];
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sessionId = (int) ($_POST['session_id'] ?? 0);
-    $patientId = (int) ($_POST['patient_id'] ?? 0);
+    $caseId = (int) ($_POST['case_id'] ?? 0);
     $planId = (int) ($_POST['treatment_plan_id'] ?? 0);
     $date = $_POST['session_date'] ?? current_date();
     $attendance = $_POST['attendance'] ?? 'attended';
     $notes = trim($_POST['notes'] ?? '');
 
-    $check = $pdo->prepare('SELECT 1 FROM patient_assignments WHERE sub_doctor_id = ? AND patient_id = ?');
-    $check->execute([$userId, $patientId]);
-    if ($check->fetchColumn()) {
+    $check = $pdo->prepare('SELECT patient_id FROM patient_assignments WHERE sub_doctor_id = ? AND case_id = ?');
+    $check->execute([$userId, $caseId]);
+    $patientId = (int) $check->fetchColumn();
+    if ($patientId) {
         if ($sessionId) {
-            $pdo->prepare('UPDATE sessions SET treatment_plan_id = ?, session_date = ?, attendance = ?, notes = ? WHERE id = ? AND created_by = ?')
-                ->execute([$planId, $date, $attendance, $notes, $sessionId, $userId]);
+            $pdo->prepare('UPDATE sessions SET treatment_plan_id = ?, case_id = ?, session_date = ?, attendance = ?, notes = ? WHERE id = ? AND created_by = ?')
+                ->execute([$planId, $caseId, $date, $attendance, $notes, $sessionId, $userId]);
         } else {
-            $visitId = $patientId ? latest_visit_id($patientId) : null;
-            $pdo->prepare('INSERT INTO sessions (patient_id, treatment_plan_id, visit_id, session_date, attendance, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)')
-                ->execute([$patientId, $planId, $visitId, $date, $attendance, $notes, $userId]);
+            $pdo->prepare('INSERT INTO sessions (patient_id, treatment_plan_id, case_id, session_date, attendance, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)')
+                ->execute([$patientId, $planId, $caseId, $date, $attendance, $notes, $userId]);
         }
     }
 }
 
 $plans = [];
 $sessions = [];
-if ($patientId) {
-    $planStmt = $pdo->prepare('SELECT id, total_sessions FROM treatment_plans WHERE patient_id = ? ORDER BY created_at DESC');
-    $planStmt->execute([$patientId]);
+if ($caseId) {
+    $planStmt = $pdo->prepare('SELECT id, total_sessions FROM treatment_plans WHERE case_id = ? ORDER BY created_at DESC');
+    $planStmt->execute([$caseId]);
     $plans = $planStmt->fetchAll();
 
-    $sessionStmt = $pdo->prepare('SELECT * FROM sessions WHERE patient_id = ? ORDER BY session_date DESC');
-    $sessionStmt->execute([$patientId]);
+    $sessionStmt = $pdo->prepare('SELECT * FROM sessions WHERE case_id = ? ORDER BY session_date DESC');
+    $sessionStmt->execute([$caseId]);
     $sessions = $sessionStmt->fetchAll();
 }
 
@@ -69,12 +70,12 @@ require __DIR__ . '/../layout/header.php';
 <form method="post">
     <input type="hidden" name="session_id" value="<?php echo $editSession ? (int) $editSession['id'] : 0; ?>">
     <div class="grid">
-        <label>Patient
-            <select name="patient_id" required>
+        <label>Case
+            <select name="case_id" required>
                 <option value="">Select</option>
-                <?php foreach ($patients as $p): ?>
-                    <option value="<?php echo $p['id']; ?>" <?php if ($patientId === (int) $p['id']) echo 'selected'; ?>>
-                        <?php echo e($p['first_name'] . ' ' . $p['last_name']); ?>
+                <?php foreach ($cases as $c): ?>
+                    <option value="<?php echo $c['case_id']; ?>" <?php if ($caseId === (int) $c['case_id']) echo 'selected'; ?>>
+                        <?php echo e($c['first_name'] . ' ' . $c['last_name']); ?> - <?php echo e($c['visit_date']); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -107,7 +108,7 @@ require __DIR__ . '/../layout/header.php';
     <button class="btn" type="submit"><?php echo $editSession ? 'Update Notes' : 'Save Notes'; ?></button>
 </form>
 
-<?php if ($patientId): ?>
+<?php if ($caseId): ?>
     <h3>Session History</h3>
     <table>
         <thead><tr><th>Date</th><th>Attendance</th><th>Notes</th><th>Action</th></tr></thead>

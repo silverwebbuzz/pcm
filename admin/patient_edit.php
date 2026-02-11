@@ -34,10 +34,10 @@ try {
     $painByCategory = [];
 }
 
-$latestVisitId = latest_visit_id($id);
+$latestVisitId = latest_case_id($id);
 $selectedPainIds = [];
 if ($latestVisitId) {
-    $selectedPainIdsStmt = $pdo->prepare('SELECT pain_master_id FROM patient_pain WHERE patient_id = ? AND visit_id = ?');
+$selectedPainIdsStmt = $pdo->prepare('SELECT pain_master_id FROM patient_pain WHERE patient_id = ? AND case_id = ?');
     $selectedPainIdsStmt->execute([$id, $latestVisitId]);
     $selectedPainIds = array_map('intval', $selectedPainIdsStmt->fetchAll(PDO::FETCH_COLUMN));
 }
@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($createNewVisit || !$latestVisitId) {
             $stmt = $pdo->prepare('
-                INSERT INTO patient_visits (
+                INSERT INTO patient_cases (
                     patient_id, visit_date, chief_complain, history_present_illness, past_medical_history,
                     surgical_history, family_history, socio_economic_status, observation_built, observation_attitude_limb,
                     observation_posture, observation_deformity, aids_applications, gait, palpation_tenderness,
@@ -240,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $latestVisitId = (int) $pdo->lastInsertId();
         } else {
             $stmt = $pdo->prepare('
-                UPDATE patient_visits SET
+                UPDATE patient_cases SET
                     visit_date = ?, chief_complain = ?, history_present_illness = ?, past_medical_history = ?,
                     surgical_history = ?, family_history = ?, socio_economic_status = ?, observation_built = ?,
                     observation_attitude_limb = ?, observation_posture = ?, observation_deformity = ?, aids_applications = ?,
@@ -285,10 +285,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
         }
 
-        $pdo->prepare('DELETE FROM patient_pain WHERE patient_id = ? AND visit_id = ?')->execute([$id, $latestVisitId]);
+        $pdo->prepare('DELETE FROM patient_pain WHERE patient_id = ? AND case_id = ?')->execute([$id, $latestVisitId]);
         $selectedPain = $_POST['pain_subcategories'] ?? [];
         if (is_array($selectedPain) && count($selectedPain) > 0) {
-            $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, visit_id, pain_master_id) VALUES (?, ?, ?)');
+            $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, case_id, pain_master_id) VALUES (?, ?, ?)');
             foreach ($selectedPain as $painId) {
                 $stmt->execute([$id, $latestVisitId, (int) $painId]);
             }

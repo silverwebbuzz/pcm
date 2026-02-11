@@ -21,9 +21,15 @@ function format_money($amount): string
     return number_format((float) $amount, 2);
 }
 
-function latest_visit_id(int $patientId): ?int
+function latest_case_id(int $patientId): ?int
 {
-    $stmt = db()->prepare('SELECT id FROM patient_visits WHERE patient_id = ? ORDER BY created_at DESC LIMIT 1');
+    $stmt = db()->prepare("SELECT id FROM patient_cases WHERE patient_id = ? AND status = 'open' ORDER BY created_at DESC LIMIT 1");
+    $stmt->execute([$patientId]);
+    $id = $stmt->fetchColumn();
+    if ($id) {
+        return (int) $id;
+    }
+    $stmt = db()->prepare('SELECT id FROM patient_cases WHERE patient_id = ? ORDER BY created_at DESC LIMIT 1');
     $stmt->execute([$patientId]);
     $id = $stmt->fetchColumn();
     return $id ? (int) $id : null;
