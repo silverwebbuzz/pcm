@@ -17,7 +17,8 @@ foreach ($painRows as $row) {
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $patientId = (int) ($_POST['patient_id'] ?? 0);
-    $visitDate = $_POST['visit_date'] ?? current_date();
+    $visitDateInput = $_POST['visit_date'] ?? date('Y-m-d\TH:i');
+    $visitDate = date('Y-m-d H:i:s', strtotime($visitDateInput));
     $duration = trim($_POST['condition_duration'] ?? '');
     $chief = trim($_POST['chief_complain'] ?? '');
     $diagnosis = trim($_POST['diagnosis'] ?? '');
@@ -118,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 require __DIR__ . '/../layout/header.php';
+$visitDefault = date('Y-m-d\TH:i');
 ?>
 <div class="page-header">
     <div>
@@ -127,11 +129,11 @@ require __DIR__ . '/../layout/header.php';
 </div>
 <?php if ($error): ?><div class="error"><?php echo e($error); ?></div><?php endif; ?>
 <form method="post">
-    <div class="form-layout">
-        <div class="form-main">
     <div class="section-card">
+        <div class="section-title"><h3>Patient &amp; Visit</h3></div>
         <div class="grid">
             <label>Patient
+                <input type="text" class="select-search" placeholder="Search patient...">
                 <select name="patient_id" required>
                     <option value="">Select</option>
                     <?php foreach ($patients as $p): ?>
@@ -141,37 +143,51 @@ require __DIR__ . '/../layout/header.php';
                     <?php endforeach; ?>
                 </select>
             </label>
-            <label>Visit Date
-                <input type="date" name="visit_date" value="<?php echo current_date(); ?>">
+            <label>Visit Date &amp; Time
+                <input type="datetime-local" name="visit_date" value="<?php echo e($visitDefault); ?>">
+            </label>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title"><h3>Complaint</h3></div>
+        <div class="grid">
+            <label>Whole Pain Areas
+                <div class="multi-select">
+                    <button class="multi-trigger" type="button">Select pain areas</button>
+                    <div class="multi-panel">
+                        <input type="text" class="multi-search" placeholder="Search pain areas...">
+                        <div class="multi-options">
+                            <?php foreach ($painByCategory as $category => $items): ?>
+                                <div class="multi-group" data-category="<?php echo e($category); ?>">
+                                    <div class="multi-group-title">
+                                        <label>
+                                            <input type="checkbox" class="multi-category" value="<?php echo e($category); ?>">
+                                            <?php echo e($category); ?>
+                                        </label>
+                                    </div>
+                                    <div class="multi-group-items">
+                                        <?php foreach ($items as $item): ?>
+                                            <label>
+                                                <input type="checkbox" name="pain_subcategories[]" value="<?php echo (int) $item['id']; ?>" data-label="<?php echo e($category . ' - ' . $item['subcategory']); ?>">
+                                                <?php echo e($item['subcategory']); ?>
+                                            </label>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
             </label>
             <label>Duration of Condition
                 <input name="condition_duration">
             </label>
         </div>
-        <label>Chief Complaint
+        <div class="multi-selected chip-group"></div>
+        <label>Notes
             <textarea name="chief_complain" rows="2"></textarea>
         </label>
-    </div>
-
-    <div class="section-card">
-        <div class="section-title"><h3>History</h3></div>
-        <div class="grid">
-            <label>History of Present Illness
-                <textarea name="history_present_illness" rows="3"></textarea>
-            </label>
-            <label>Past Medical History
-                <textarea name="past_medical_history" rows="3"></textarea>
-            </label>
-            <label>Surgical History
-                <textarea name="surgical_history" rows="3"></textarea>
-            </label>
-            <label>Family History
-                <textarea name="family_history" rows="3"></textarea>
-            </label>
-            <label>Socio Economic Status
-                <textarea name="socio_economic_status" rows="2"></textarea>
-            </label>
-        </div>
     </div>
 
     <div class="section-card">
@@ -221,48 +237,24 @@ require __DIR__ . '/../layout/header.php';
     </div>
 
     <div class="section-card">
-        <div class="section-title"><h3>Examination</h3></div>
+        <div class="section-title"><h3>History</h3></div>
         <div class="grid">
-            <label>ROM
-                <textarea name="examination_rom" rows="3"></textarea>
+            <label>History of Present Illness
+                <textarea name="history_present_illness" rows="3"></textarea>
             </label>
-            <label>Muscle Power
-                <textarea name="muscle_power" rows="2"></textarea>
+            <label>Past Medical History
+                <textarea name="past_medical_history" rows="3"></textarea>
             </label>
-            <label>Muscle Bulk
-                <textarea name="muscle_bulk" rows="2"></textarea>
+            <label>Surgical History
+                <textarea name="surgical_history" rows="3"></textarea>
             </label>
-            <label>Ligament Instability
-                <textarea name="ligament_instability" rows="2"></textarea>
+            <label>Family History
+                <textarea name="family_history" rows="3"></textarea>
+            </label>
+            <label>Socio Economic Status
+                <textarea name="socio_economic_status" rows="2"></textarea>
             </label>
         </div>
-    </div>
-
-        </div>
-        <div class="form-side">
-    <div class="section-card">
-        <div class="section-title"><h3>Pain Areas</h3></div>
-        <div class="card-grid">
-            <?php foreach ($painByCategory as $category => $items): ?>
-                <label class="chip-select">
-                    <input type="checkbox" name="pain_categories[]" value="<?php echo e($category); ?>">
-                    <?php echo e($category); ?>
-                </label>
-            <?php endforeach; ?>
-        </div>
-        <?php foreach ($painByCategory as $category => $items): ?>
-            <div class="subcategory-group" data-category="<?php echo e($category); ?>" style="display:none; margin-top:10px;">
-                <div class="info-label"><?php echo e($category); ?> Subcategories</div>
-                <div class="card-grid">
-                    <?php foreach ($items as $item): ?>
-                        <label class="chip-select">
-                            <input type="checkbox" name="pain_subcategories[]" value="<?php echo (int) $item['id']; ?>">
-                            <?php echo e($item['subcategory']); ?>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        <?php endforeach; ?>
     </div>
 
     <div class="section-card">
@@ -293,6 +285,24 @@ require __DIR__ . '/../layout/header.php';
     </div>
 
     <div class="section-card">
+        <div class="section-title"><h3>Examination</h3></div>
+        <div class="grid">
+            <label>ROM
+                <textarea name="examination_rom" rows="3"></textarea>
+            </label>
+            <label>Muscle Power
+                <textarea name="muscle_power" rows="2"></textarea>
+            </label>
+            <label>Muscle Bulk
+                <textarea name="muscle_bulk" rows="2"></textarea>
+            </label>
+            <label>Ligament Instability
+                <textarea name="ligament_instability" rows="2"></textarea>
+            </label>
+        </div>
+    </div>
+
+    <div class="section-card">
         <div class="section-title"><h3>Diagnosis &amp; Goals</h3></div>
         <label>Diagnosis
             <textarea name="diagnosis" rows="2"></textarea>
@@ -301,28 +311,87 @@ require __DIR__ . '/../layout/header.php';
             <textarea name="treatment_goals" rows="2"></textarea>
         </label>
     </div>
-        </div>
-    </div>
     <button class="btn" type="submit">Open Case</button>
 </form>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var categoryInputs = document.querySelectorAll('input[name="pain_categories[]"]');
-    var groups = document.querySelectorAll('.subcategory-group');
-    function toggleGroups() {
-        groups.forEach(function (group) {
-            var category = group.getAttribute('data-category');
-            var checked = false;
-            categoryInputs.forEach(function (input) {
-                if (input.value === category && input.checked) checked = true;
+    var patientSearch = document.querySelector('.select-search');
+    var patientSelect = document.querySelector('select[name="patient_id"]');
+    if (patientSearch && patientSelect) {
+        var options = Array.from(patientSelect.options);
+        patientSearch.addEventListener('input', function () {
+            var term = patientSearch.value.toLowerCase();
+            patientSelect.innerHTML = '';
+            options.forEach(function (opt) {
+                if (!term || opt.text.toLowerCase().indexOf(term) !== -1 || opt.value === '') {
+                    patientSelect.appendChild(opt);
+                }
             });
-            group.style.display = checked ? 'block' : 'none';
         });
     }
-    categoryInputs.forEach(function (input) {
-        input.addEventListener('change', toggleGroups);
+
+    var multi = document.querySelector('.multi-select');
+    if (!multi) return;
+    var trigger = multi.querySelector('.multi-trigger');
+    var panel = multi.querySelector('.multi-panel');
+    var search = multi.querySelector('.multi-search');
+    var selectedWrap = document.querySelector('.multi-selected');
+
+    trigger.addEventListener('click', function () {
+        panel.classList.toggle('open');
     });
-    toggleGroups();
+    document.addEventListener('click', function (e) {
+        if (!multi.contains(e.target)) {
+            panel.classList.remove('open');
+        }
+    });
+
+    function renderSelected() {
+        var checked = multi.querySelectorAll('input[name="pain_subcategories[]"]:checked');
+        selectedWrap.innerHTML = '';
+        checked.forEach(function (input) {
+            var chip = document.createElement('span');
+            chip.className = 'chip';
+            chip.textContent = input.dataset.label || input.value;
+            selectedWrap.appendChild(chip);
+        });
+        trigger.textContent = checked.length ? checked.length + ' selected' : 'Select pain areas';
+    }
+
+    multi.querySelectorAll('input[name="pain_subcategories[]"]').forEach(function (input) {
+        input.addEventListener('change', renderSelected);
+    });
+
+    multi.querySelectorAll('.multi-category').forEach(function (input) {
+        input.addEventListener('change', function () {
+            var group = input.closest('.multi-group');
+            if (!group) return;
+            group.querySelectorAll('input[name="pain_subcategories[]"]').forEach(function (child) {
+                child.checked = input.checked;
+            });
+            renderSelected();
+        });
+    });
+
+    if (search) {
+        search.addEventListener('input', function () {
+            var term = search.value.toLowerCase();
+            multi.querySelectorAll('.multi-group').forEach(function (group) {
+                var matchesGroup = group.dataset.category.toLowerCase().indexOf(term) !== -1;
+                var anyChild = false;
+                group.querySelectorAll('label').forEach(function (label) {
+                    var text = label.textContent.toLowerCase();
+                    var visible = term === '' || text.indexOf(term) !== -1;
+                    label.style.display = visible ? 'flex' : 'none';
+                    if (visible && label.querySelector('input[name="pain_subcategories[]"]')) {
+                        anyChild = true;
+                    }
+                });
+                group.style.display = matchesGroup || anyChild ? 'block' : 'none';
+            });
+        });
+    }
+    renderSelected();
 });
 </script>
 <?php require __DIR__ . '/../layout/footer.php'; ?>
