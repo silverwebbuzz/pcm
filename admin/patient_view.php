@@ -68,6 +68,20 @@ if (!empty($patient['user_id'])) {
     $patientEmail = (string) $stmt->fetchColumn();
 }
 
+$painStmt = $pdo->prepare('
+    SELECT pm.category, pm.subcategory
+    FROM patient_pain pp
+    JOIN pain_master pm ON pm.id = pp.pain_master_id
+    WHERE pp.patient_id = ?
+    ORDER BY pm.category, pm.subcategory
+');
+$painStmt->execute([$id]);
+$painRows = $painStmt->fetchAll();
+$painByCategory = [];
+foreach ($painRows as $row) {
+    $painByCategory[$row['category']][] = $row['subcategory'];
+}
+
 require __DIR__ . '/../layout/header.php';
 ?>
 <?php
@@ -179,6 +193,21 @@ require __DIR__ . '/../layout/header.php';
         <span>Pain Scale: <?php echo e($patient['pain_measurement'] ?? 'N/A'); ?></span>
     </div>
 </div>
+<?php if (!empty($painByCategory)): ?>
+    <div class="section-card" style="margin-top:12px;">
+        <div class="info-label">Pain Areas &amp; Subcategories</div>
+        <?php foreach ($painByCategory as $category => $subs): ?>
+            <div style="margin-top:8px;">
+                <strong><?php echo e($category); ?></strong>
+                <div class="chip-group">
+                    <?php foreach ($subs as $sub): ?>
+                        <span class="chip"><?php echo e($sub); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
 
 <div class="section-card section-title">
     <h3>Medical History</h3>

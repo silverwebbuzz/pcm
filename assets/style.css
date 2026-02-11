@@ -439,6 +439,32 @@ input, select, textarea {
 }
 label { display: block; margin-bottom: 12px; font-size: 14px; color: #4b5875; }
 
+.chip-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+.chip {
+    background: #eef3ff;
+    color: #2d3a55;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid #dfe7f5;
+}
+.chip-select {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+.chip-select input { width: auto; margin: 0; }
+
 /* Responsive breakpoints */
 @media (min-width: 640px) {
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

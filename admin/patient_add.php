@@ -4,8 +4,15 @@ require_once __DIR__ . '/../helpers.php';
 require_login();
 require_role(['admin_doctor']);
 
+$pdo = db();
 $error = '';
 $success = '';
+
+$painRows = $pdo->query("SELECT id, category, subcategory FROM pain_master WHERE active = 1 ORDER BY category, subcategory")->fetchAll();
+$painByCategory = [];
+foreach ($painRows as $row) {
+    $painByCategory[$row['category']][] = $row;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = [
@@ -55,7 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($data['first_name'] === '' || $data['last_name'] === '') {
         $error = 'First and last name are required.';
     } else {
-        $pdo = db();
         $pdo->beginTransaction();
         try {
             $userId = null;
@@ -139,6 +145,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['treatment_goals'],
                 current_user()['id'],
             ]);
+            $patientId = (int) $pdo->lastInsertId();
+
+            $selectedPain = $_POST['pain_subcategories'] ?? [];
+            if (is_array($selectedPain) && count($selectedPain) > 0) {
+                $stmt = $pdo->prepare('INSERT INTO patient_pain (patient_id, pain_master_id) VALUES (?, ?)');
+                foreach ($selectedPain as $painId) {
+                    $stmt->execute([$patientId, (int) $painId]);
+                }
+            }
             $pdo->commit();
             $success = 'Patient created successfully.';
         } catch (Exception $e) {
@@ -272,6 +287,30 @@ require __DIR__ . '/../layout/header.php';
     </label>
 
     <h3>Pain Assessment</h3>
+    <div class="section-card">
+        <div class="info-label">Pain Areas</div>
+        <div class="card-grid">
+            <?php foreach ($painByCategory as $category => $items): ?>
+                <label class="chip-select">
+                    <input type="checkbox" name="pain_categories[]" value="<?php echo e($category); ?>">
+                    <?php echo e($category); ?>
+                </label>
+            <?php endforeach; ?>
+        </div>
+        <?php foreach ($painByCategory as $category => $items): ?>
+            <div class="subcategory-group" data-category="<?php echo e($category); ?>" style="display:none; margin-top:10px;">
+                <div class="info-label"><?php echo e($category); ?> Subcategories</div>
+                <div class="card-grid">
+                    <?php foreach ($items as $item): ?>
+                        <label class="chip-select">
+                            <input type="checkbox" name="pain_subcategories[]" value="<?php echo (int) $item['id']; ?>">
+                            <?php echo e($item['subcategory']); ?>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
     <label>Type of Pain
         <textarea name="pain_type" rows="2"></textarea>
     </label>
@@ -322,4 +361,24 @@ require __DIR__ . '/../layout/header.php';
 
     <button class="btn" type="submit">Save Patient</button>
 </form>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var categoryInputs = document.querySelectorAll('input[name="pain_categories[]"]');
+    var groups = document.querySelectorAll('.subcategory-group');
+    function toggleGroups() {
+        groups.forEach(function (group) {
+            var category = group.getAttribute('data-category');
+            var checked = false;
+            categoryInputs.forEach(function (input) {
+                if (input.value === category && input.checked) checked = true;
+            });
+            group.style.display = checked ? 'block' : 'none';
+        });
+    }
+    categoryInputs.forEach(function (input) {
+        input.addEventListener('change', toggleGroups);
+    });
+    toggleGroups();
+});
+</script>
 <?php require __DIR__ . '/../layout/footer.php'; ?>
