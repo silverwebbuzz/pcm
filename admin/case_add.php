@@ -133,15 +133,20 @@ $visitDefault = date('Y-m-d\TH:i');
         <div class="section-title"><h3>Patient &amp; Visit</h3></div>
         <div class="grid">
             <label>Patient
-                <input type="text" class="select-search" placeholder="Search patient...">
-                <select name="patient_id" required>
-                    <option value="">Select</option>
-                    <?php foreach ($patients as $p): ?>
-                        <option value="<?php echo $p['id']; ?>" <?php if ($patientId === (int) $p['id']) echo 'selected'; ?>>
-                            <?php echo e($p['first_name'] . ' ' . $p['last_name']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <div class="select-box">
+                    <button class="select-trigger" type="button">Select patient</button>
+                    <div class="select-panel">
+                        <input type="text" class="select-filter" placeholder="Search patient...">
+                        <div class="select-options">
+                            <?php foreach ($patients as $p): ?>
+                                <label>
+                                    <input type="radio" name="patient_id" value="<?php echo $p['id']; ?>" <?php if ($patientId === (int) $p['id']) echo 'checked'; ?>>
+                                    <?php echo e($p['first_name'] . ' ' . $p['last_name']); ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
             </label>
             <label>Visit Date &amp; Time
                 <input type="datetime-local" name="visit_date" value="<?php echo e($visitDefault); ?>">
@@ -160,12 +165,7 @@ $visitDefault = date('Y-m-d\TH:i');
                         <div class="multi-options">
                             <?php foreach ($painByCategory as $category => $items): ?>
                                 <div class="multi-group" data-category="<?php echo e($category); ?>">
-                                    <div class="multi-group-title">
-                                        <label>
-                                            <input type="checkbox" class="multi-category" value="<?php echo e($category); ?>">
-                                            <?php echo e($category); ?>
-                                        </label>
-                                    </div>
+                                    <div class="multi-group-title"><?php echo e($category); ?></div>
                                     <div class="multi-group-items">
                                         <?php foreach ($items as $item): ?>
                                             <label>
@@ -315,79 +315,85 @@ $visitDefault = date('Y-m-d\TH:i');
 </form>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var patientSearch = document.querySelector('.select-search');
-    var patientSelect = document.querySelector('select[name="patient_id"]');
-    if (patientSearch && patientSelect) {
-        var options = Array.from(patientSelect.options);
-        patientSearch.addEventListener('input', function () {
-            var term = patientSearch.value.toLowerCase();
-            patientSelect.innerHTML = '';
-            options.forEach(function (opt) {
-                if (!term || opt.text.toLowerCase().indexOf(term) !== -1 || opt.value === '') {
-                    patientSelect.appendChild(opt);
-                }
+    var patientSelect = document.querySelector('.select-box');
+    if (patientSelect) {
+        var trigger = patientSelect.querySelector('.select-trigger');
+        var panel = patientSelect.querySelector('.select-panel');
+        var filter = patientSelect.querySelector('.select-filter');
+        var options = Array.from(patientSelect.querySelectorAll('.select-options label'));
+        var updateTrigger = function () {
+            var checked = patientSelect.querySelector('input[type="radio"]:checked');
+            trigger.textContent = checked ? checked.parentElement.textContent.trim() : 'Select patient';
+        };
+        trigger.addEventListener('click', function () {
+            panel.classList.toggle('open');
+        });
+        document.addEventListener('click', function (e) {
+            if (!patientSelect.contains(e.target)) panel.classList.remove('open');
+        });
+        filter.addEventListener('input', function () {
+            var term = filter.value.toLowerCase();
+            options.forEach(function (label) {
+                var visible = term === '' || label.textContent.toLowerCase().indexOf(term) !== -1;
+                label.style.display = visible ? 'flex' : 'none';
             });
         });
+        patientSelect.querySelectorAll('input[type="radio"]').forEach(function (input) {
+            input.addEventListener('change', function () {
+                updateTrigger();
+                panel.classList.remove('open');
+            });
+        });
+        updateTrigger();
     }
 
     var multi = document.querySelector('.multi-select');
     if (!multi) return;
-    var trigger = multi.querySelector('.multi-trigger');
+    var multiTrigger = multi.querySelector('.multi-trigger');
     var panel = multi.querySelector('.multi-panel');
     var search = multi.querySelector('.multi-search');
     var selectedWrap = document.querySelector('.multi-selected');
 
-    trigger.addEventListener('click', function () {
+    multiTrigger.addEventListener('click', function () {
         panel.classList.toggle('open');
     });
     document.addEventListener('click', function (e) {
-        if (!multi.contains(e.target)) {
-            panel.classList.remove('open');
-        }
+        if (!multi.contains(e.target)) panel.classList.remove('open');
     });
 
     function renderSelected() {
         var checked = multi.querySelectorAll('input[name="pain_subcategories[]"]:checked');
         selectedWrap.innerHTML = '';
         checked.forEach(function (input) {
-            var chip = document.createElement('span');
-            chip.className = 'chip';
-            chip.textContent = input.dataset.label || input.value;
+            var chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'chip chip-removable';
+            chip.innerHTML = '<span>' + (input.dataset.label || input.value) + '</span><span class="chip-x">×</span>';
+            chip.addEventListener('click', function () {
+                input.checked = false;
+                renderSelected();
+            });
             selectedWrap.appendChild(chip);
         });
-        trigger.textContent = checked.length ? checked.length + ' selected' : 'Select pain areas';
+        multiTrigger.textContent = checked.length ? checked.length + ' selected' : 'Select pain areas';
     }
 
     multi.querySelectorAll('input[name="pain_subcategories[]"]').forEach(function (input) {
         input.addEventListener('change', renderSelected);
     });
 
-    multi.querySelectorAll('.multi-category').forEach(function (input) {
-        input.addEventListener('change', function () {
-            var group = input.closest('.multi-group');
-            if (!group) return;
-            group.querySelectorAll('input[name="pain_subcategories[]"]').forEach(function (child) {
-                child.checked = input.checked;
-            });
-            renderSelected();
-        });
-    });
-
     if (search) {
         search.addEventListener('input', function () {
             var term = search.value.toLowerCase();
             multi.querySelectorAll('.multi-group').forEach(function (group) {
-                var matchesGroup = group.dataset.category.toLowerCase().indexOf(term) !== -1;
                 var anyChild = false;
                 group.querySelectorAll('label').forEach(function (label) {
                     var text = label.textContent.toLowerCase();
                     var visible = term === '' || text.indexOf(term) !== -1;
                     label.style.display = visible ? 'flex' : 'none';
-                    if (visible && label.querySelector('input[name="pain_subcategories[]"]')) {
-                        anyChild = true;
-                    }
+                    if (visible) anyChild = true;
                 });
-                group.style.display = matchesGroup || anyChild ? 'block' : 'none';
+                group.style.display = anyChild ? 'block' : 'none';
             });
         });
     }
