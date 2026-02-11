@@ -132,32 +132,35 @@ $visitDefault = date('Y-m-d\TH:i');
     <div class="section-card">
         <div class="section-title"><h3>Patient &amp; Visit</h3></div>
         <div class="grid">
-            <label>Patient
+            <div class="field">
+                <label class="field-label">Patient</label>
                 <div class="select-box">
                     <button class="select-trigger" type="button">Select patient</button>
                     <div class="select-panel">
                         <input type="text" class="select-filter" placeholder="Search patient...">
                         <div class="select-options">
                             <?php foreach ($patients as $p): ?>
-                                <label>
+                                <label class="select-option">
                                     <input type="radio" name="patient_id" value="<?php echo $p['id']; ?>" <?php if ($patientId === (int) $p['id']) echo 'checked'; ?>>
-                                    <?php echo e($p['first_name'] . ' ' . $p['last_name']); ?>
+                                    <span><?php echo e($p['first_name'] . ' ' . $p['last_name']); ?></span>
                                 </label>
                             <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
-            </label>
-            <label>Visit Date &amp; Time
+            </div>
+            <div class="field">
+                <label class="field-label">Visit Date &amp; Time</label>
                 <input type="datetime-local" name="visit_date" value="<?php echo e($visitDefault); ?>">
-            </label>
+            </div>
         </div>
     </div>
 
     <div class="section-card">
         <div class="section-title"><h3>Complaint</h3></div>
         <div class="grid">
-            <label>Whole Pain Areas
+            <div class="field">
+                <label class="field-label">Whole Pain Areas</label>
                 <div class="multi-select">
                     <button class="multi-trigger" type="button">Select pain areas</button>
                     <div class="multi-panel">
@@ -168,9 +171,9 @@ $visitDefault = date('Y-m-d\TH:i');
                                     <div class="multi-group-title"><?php echo e($category); ?></div>
                                     <div class="multi-group-items">
                                         <?php foreach ($items as $item): ?>
-                                            <label>
+                                            <label class="multi-option">
                                                 <input type="checkbox" name="pain_subcategories[]" value="<?php echo (int) $item['id']; ?>" data-label="<?php echo e($category . ' - ' . $item['subcategory']); ?>">
-                                                <?php echo e($item['subcategory']); ?>
+                                                <span><?php echo e($item['subcategory']); ?></span>
                                             </label>
                                         <?php endforeach; ?>
                                     </div>
@@ -179,15 +182,17 @@ $visitDefault = date('Y-m-d\TH:i');
                         </div>
                     </div>
                 </div>
-            </label>
-            <label>Duration of Condition
+            </div>
+            <div class="field">
+                <label class="field-label">Duration of Condition</label>
                 <input name="condition_duration">
-            </label>
+            </div>
         </div>
         <div class="multi-selected chip-group"></div>
-        <label>Notes
+        <div class="field">
+            <label class="field-label">Notes</label>
             <textarea name="chief_complain" rows="2"></textarea>
-        </label>
+        </div>
     </div>
 
     <div class="section-card">
@@ -320,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var trigger = patientSelect.querySelector('.select-trigger');
         var panel = patientSelect.querySelector('.select-panel');
         var filter = patientSelect.querySelector('.select-filter');
-        var options = Array.from(patientSelect.querySelectorAll('.select-options label'));
+        var options = Array.from(patientSelect.querySelectorAll('.select-option'));
         var updateTrigger = function () {
             var checked = patientSelect.querySelector('input[type="radio"]:checked');
             trigger.textContent = checked ? checked.parentElement.textContent.trim() : 'Select patient';
@@ -333,9 +338,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         filter.addEventListener('input', function () {
             var term = filter.value.toLowerCase();
-            options.forEach(function (label) {
-                var visible = term === '' || label.textContent.toLowerCase().indexOf(term) !== -1;
-                label.style.display = visible ? 'flex' : 'none';
+            options.forEach(function (option) {
+                var visible = term === '' || option.textContent.toLowerCase().indexOf(term) !== -1;
+                option.style.display = visible ? 'flex' : 'none';
             });
         });
         patientSelect.querySelectorAll('input[type="radio"]').forEach(function (input) {
@@ -387,10 +392,10 @@ document.addEventListener('DOMContentLoaded', function () {
             var term = search.value.toLowerCase();
             multi.querySelectorAll('.multi-group').forEach(function (group) {
                 var anyChild = false;
-                group.querySelectorAll('label').forEach(function (label) {
-                    var text = label.textContent.toLowerCase();
+                group.querySelectorAll('.multi-option').forEach(function (option) {
+                    var text = option.textContent.toLowerCase();
                     var visible = term === '' || text.indexOf(term) !== -1;
-                    label.style.display = visible ? 'flex' : 'none';
+                    option.style.display = visible ? 'flex' : 'none';
                     if (visible) anyChild = true;
                 });
                 group.style.display = anyChild ? 'block' : 'none';
