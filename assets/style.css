@@ -318,6 +318,7 @@ h3 { margin-bottom: 8px; color: var(--text); font-weight: 600; }
     overflow-x: auto;
     background: #fff;
     box-shadow: var(--shadow);
+    -webkit-overflow-scrolling: touch;
 }
  .table-controls {
     display: flex;
@@ -374,6 +375,7 @@ th, td {
     padding: 16px 14px;
     text-align: left;
     font-size: 14px;
+    white-space: nowrap;
 }
 th {
     background: #f8f9fc;
@@ -556,6 +558,32 @@ label { display: block; margin-bottom: 12px; font-size: 14px; color: #4b5875; }
         padding-left: 0;
         border-top: 1px solid var(--border);
         padding-top: 10px;
+    }
+}
+@media (max-width: 900px) {
+    .table-controls,
+    .table-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .table-controls-left,
+    .table-controls-right {
+        width: 100%;
+    }
+    .table-controls label {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .table-controls select,
+    .table-controls input {
+        width: 100%;
+    }
+    .table-info {
+        text-align: left;
+    }
+    .table-pager {
+        justify-content: flex-start;
+        flex-wrap: wrap;
     }
 }
 @media (min-width: 768px) {
