@@ -6,7 +6,7 @@ require_role(['admin_doctor']);
 
 $pdo = db();
 $patientId = (int) ($_GET['patient_id'] ?? 0);
-$status = trim($_GET['status'] ?? '');
+$status = trim($_GET['status'] ?? 'open');
 $search = trim($_GET['q'] ?? '');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['close_case_id'])) {
@@ -26,6 +26,9 @@ if ($patientId) {
     $query .= ' AND pc.patient_id = ?';
     $params[] = $patientId;
 }
+if (!in_array($status, ['open', 'closed'], true)) {
+    $status = 'open';
+}
 if ($status !== '') {
     $query .= ' AND pc.status = ?';
     $params[] = $status;
@@ -36,7 +39,7 @@ if ($search !== '') {
     $params[] = '%' . $search . '%';
     $params[] = '%' . $search . '%';
 }
-$query .= ' ORDER BY pc.created_at DESC';
+$query .= ' ORDER BY pc.visit_date DESC';
 
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);
@@ -59,19 +62,19 @@ require __DIR__ . '/../layout/header.php';
         <div>
             <input type="text" name="q" placeholder="Search by patient or complaint..." value="<?php echo e($search); ?>">
         </div>
-        <div>
-            <select name="status">
-                <option value="">All Status</option>
-                <option value="open" <?php if ($status === 'open') echo 'selected'; ?>>Open</option>
-                <option value="closed" <?php if ($status === 'closed') echo 'selected'; ?>>Closed</option>
-            </select>
-        </div>
     </div>
     <div class="actions">
         <button class="btn" type="submit">Filter</button>
-        <a class="btn ghost" href="cases.php">Reset</a>
+        <a class="btn ghost" href="cases.php?status=<?php echo e($status); ?>">Reset</a>
     </div>
 </form>
+
+<div class="section-card" style="margin-top: 12px;">
+    <div class="chip-group">
+        <a class="btn <?php echo $status === 'open' ? '' : 'ghost'; ?>" href="cases.php?status=open">Open</a>
+        <a class="btn <?php echo $status === 'closed' ? '' : 'ghost'; ?>" href="cases.php?status=closed">Closed</a>
+    </div>
+</div>
 
 <div class="table-wrap">
 <table>
@@ -89,7 +92,7 @@ require __DIR__ . '/../layout/header.php';
     <?php foreach ($cases as $case): ?>
         <tr>
             <td><?php echo e($case['first_name'] . ' ' . $case['last_name']); ?></td>
-            <td><?php echo e($case['visit_date']); ?></td>
+            <td><?php echo e($case['visit_date'] ? date('d / m / Y', strtotime($case['visit_date'])) : ''); ?></td>
             <td><?php echo e($case['chief_complain']); ?></td>
             <td><?php echo e($case['diagnosis']); ?></td>
             <td><span class="badge <?php echo $case['status'] === 'open' ? 'success' : 'muted'; ?>"><?php echo e($case['status']); ?></span></td>
