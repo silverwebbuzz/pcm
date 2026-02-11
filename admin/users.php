@@ -72,7 +72,7 @@ require __DIR__ . '/../layout/header.php';
     <button class="btn" type="submit">Create User</button>
 </form>
 
-<table>
+<table class="data-table" data-page-size="7">
     <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Reports</th><th>Action</th></tr></thead>
     <tbody>
     <?php foreach ($users as $u): ?>

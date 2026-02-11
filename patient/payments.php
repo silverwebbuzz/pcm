@@ -22,7 +22,7 @@ require __DIR__ . '/../layout/header.php';
 <?php if (!$patientId): ?>
     <p>No patient record found.</p>
 <?php else: ?>
-    <table>
+    <table class="data-table" data-page-size="7">
         <thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead>
         <tbody>
         <?php foreach ($payments as $p): ?>

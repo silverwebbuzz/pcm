@@ -83,7 +83,7 @@ require __DIR__ . '/../layout/header.php';
     <button class="btn" type="submit"><?php echo $patient ? 'Update' : 'Register'; ?></button>
 </form>
 
-<table>
+<table class="data-table" data-page-size="7">
     <thead><tr><th>Name</th><th>Phone</th><th>Action</th></tr></thead>
     <tbody>
     <?php foreach ($patients as $p): ?>

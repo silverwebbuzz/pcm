@@ -18,7 +18,7 @@ $patients = $stmt->fetchAll();
 require __DIR__ . '/../layout/header.php';
 ?>
 <h2>Assigned Patients</h2>
-<table>
+<table class="data-table" data-page-size="7">
     <thead><tr><th>Name</th><th>Case</th><th>Phone</th><th>Actions</th></tr></thead>
     <tbody>
     <?php foreach ($patients as $p): ?>

@@ -33,7 +33,7 @@ require __DIR__ . '/../layout/header.php';
         <p><strong>Current Plan:</strong> <?php echo e($plan['total_sessions']); ?> sessions</p>
         <p><strong>Completed:</strong> <?php echo $completed; ?> / <?php echo e($plan['total_sessions']); ?></p>
     <?php endif; ?>
-    <table>
+    <table class="data-table" data-page-size="7">
         <thead><tr><th>Date</th><th>Attendance</th><th>Notes</th></tr></thead>
         <tbody>
         <?php foreach ($sessions as $s): ?>

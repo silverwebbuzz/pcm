@@ -160,7 +160,7 @@ require __DIR__ . '/../layout/header.php';
     <h3>Treatment Plans</h3>
 </div>
 <div class="table-wrap">
-    <table>
+    <table class="data-table" data-page-size="7">
         <thead>
         <tr>
             <th>Cycle</th>
@@ -189,7 +189,7 @@ require __DIR__ . '/../layout/header.php';
     <h3>Sessions</h3>
 </div>
 <div class="table-wrap">
-    <table>
+    <table class="data-table" data-page-size="7">
         <thead>
         <tr>
             <th>Date</th>
@@ -218,7 +218,7 @@ require __DIR__ . '/../layout/header.php';
     <h3>Payments</h3>
 </div>
 <div class="table-wrap">
-    <table>
+    <table class="data-table" data-page-size="7">
         <thead>
         <tr>
             <th>Date</th>

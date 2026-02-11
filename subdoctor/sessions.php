@@ -110,7 +110,7 @@ require __DIR__ . '/../layout/header.php';
 
 <?php if ($caseId): ?>
     <h3>Session History</h3>
-    <table>
+    <table class="data-table" data-page-size="7">
         <thead><tr><th>Date</th><th>Attendance</th><th>Notes</th><th>Action</th></tr></thead>
         <tbody>
         <?php foreach ($sessions as $s): ?>

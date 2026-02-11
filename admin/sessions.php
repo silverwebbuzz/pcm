@@ -92,7 +92,7 @@ require __DIR__ . '/../layout/header.php';
     <button class="btn" type="submit" <?php if ($planDisabled) echo 'disabled'; ?>>Add Session</button>
 </form>
 
-<table>
+<table class="data-table" data-page-size="7">
     <thead><tr><th>Date</th><th>Patient</th><th>Attendance</th><th>Notes</th></tr></thead>
     <tbody>
     <?php foreach ($sessions as $s): ?>

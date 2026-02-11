@@ -48,7 +48,9 @@ if ($user) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Physio Clinic</title>
     <?php $cssVersion = @filemtime(__DIR__ . '/../assets/style.css') ?: time(); ?>
+    <?php $jsVersion = @filemtime(__DIR__ . '/../assets/table.js') ?: time(); ?>
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>assets/style.css?v=<?php echo $cssVersion; ?>">
+    <script src="<?php echo BASE_URL; ?>assets/table.js?v=<?php echo $jsVersion; ?>" defer></script>
 </head>
 <body>
 <header class="site-header">

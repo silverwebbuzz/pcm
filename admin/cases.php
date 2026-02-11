@@ -77,7 +77,7 @@ require __DIR__ . '/../layout/header.php';
 </div>
 
 <div class="table-wrap">
-<table>
+<table class="data-table" data-page-size="7">
     <thead>
     <tr>
         <th>Patient</th>

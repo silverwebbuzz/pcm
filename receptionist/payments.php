@@ -55,7 +55,7 @@ require __DIR__ . '/../layout/header.php';
     <button class="btn" type="submit">Record Payment</button>
 </form>
 
-<table>
+<table class="data-table" data-page-size="7">
     <thead><tr><th>Date</th><th>Patient</th><th>Amount</th><th>Method</th><th>Receipt</th></tr></thead>
     <tbody>
     <?php foreach ($payments as $pay): ?>

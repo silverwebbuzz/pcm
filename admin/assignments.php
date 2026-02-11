@@ -63,7 +63,7 @@ require __DIR__ . '/../layout/header.php';
     <button class="btn" type="submit">Assign</button>
 </form>
 
-<table>
+<table class="data-table" data-page-size="7">
     <thead><tr><th>Patient</th><th>Case</th><th>Sub-Doctor</th><th>Assigned At</th></tr></thead>
     <tbody>
     <?php foreach ($assignments as $a): ?>
