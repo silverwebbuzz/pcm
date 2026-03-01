@@ -33,22 +33,13 @@ CREATE TABLE patients (
     history_present_illness TEXT,
     past_medical_history TEXT,
     surgical_history TEXT,
-    family_history TEXT,
-    socio_economic_status TEXT,
-    observation_built TEXT,
-    observation_attitude_limb TEXT,
-    observation_posture TEXT,
-    observation_deformity TEXT,
-    aids_applications TEXT,
-    gait TEXT,
     palpation_tenderness TEXT,
     palpation_oedema VARCHAR(50),
     palpation_warmth TEXT,
-    palpation_crepitus TEXT,
+    palpation_crepitus ENUM('yes','no') NULL,
     examination_rom TEXT,
     muscle_power TEXT,
     muscle_bulk TEXT,
-    ligament_instability TEXT,
     pain_type TEXT,
     pain_site TEXT,
     pain_nature TEXT,
@@ -75,22 +66,13 @@ CREATE TABLE patient_cases (
     history_present_illness TEXT,
     past_medical_history TEXT,
     surgical_history TEXT,
-    family_history TEXT,
-    socio_economic_status TEXT,
-    observation_built TEXT,
-    observation_attitude_limb TEXT,
-    observation_posture TEXT,
-    observation_deformity TEXT,
-    aids_applications TEXT,
-    gait TEXT,
     palpation_tenderness TEXT,
     palpation_oedema VARCHAR(50),
     palpation_warmth TEXT,
-    palpation_crepitus TEXT,
+    palpation_crepitus ENUM('yes','no') NULL,
     examination_rom TEXT,
     muscle_power TEXT,
     muscle_bulk TEXT,
-    ligament_instability TEXT,
     pain_type TEXT,
     pain_site TEXT,
     pain_nature TEXT,
@@ -320,22 +302,13 @@ UPDATE patient_cases
 SET history_present_illness = CONCAT('Patient reports gradual onset of symptoms for case #', id, '.'),
     past_medical_history = 'No major chronic illness reported.',
     surgical_history = 'No prior surgeries reported.',
-    family_history = 'No significant family history.',
-    socio_economic_status = 'Middle',
-    observation_built = 'Average build, well nourished.',
-    observation_attitude_limb = 'Mild guarding noted.',
-    observation_posture = 'Slight forward posture.',
-    observation_deformity = 'No visible deformity.',
-    aids_applications = 'No assistive devices used.',
-    gait = 'Antalgic gait pattern.',
     palpation_tenderness = 'Localized tenderness present.',
     palpation_oedema = 'pitting',
     palpation_warmth = 'Mild warmth noted.',
-    palpation_crepitus = 'No crepitus detected.',
+    palpation_crepitus = 'no',
     examination_rom = 'ROM mildly restricted with discomfort.',
     muscle_power = '4/5',
     muscle_bulk = 'Normal bulk.',
-    ligament_instability = 'Negative.',
     gait_assessment = 'Mild gait deviation observed.'
 WHERE id BETWEEN 1 AND 25;
 
@@ -343,22 +316,13 @@ UPDATE patients
 SET history_present_illness = 'Initial patient assessment recorded.',
     past_medical_history = 'No major chronic illness reported.',
     surgical_history = 'No prior surgeries reported.',
-    family_history = 'No significant family history.',
-    socio_economic_status = 'Middle',
-    observation_built = 'Average build, well nourished.',
-    observation_attitude_limb = 'Mild guarding noted.',
-    observation_posture = 'Slight forward posture.',
-    observation_deformity = 'No visible deformity.',
-    aids_applications = 'No assistive devices used.',
-    gait = 'Antalgic gait pattern.',
     palpation_tenderness = 'Localized tenderness present.',
     palpation_oedema = 'pitting',
     palpation_warmth = 'Mild warmth noted.',
-    palpation_crepitus = 'No crepitus detected.',
+    palpation_crepitus = 'no',
     examination_rom = 'ROM mildly restricted with discomfort.',
     muscle_power = '4/5',
     muscle_bulk = 'Normal bulk.',
-    ligament_instability = 'Negative.',
     pain_type = 'Mechanical',
     pain_site = 'Primary pain site',
     pain_nature = 'Dull ache',
@@ -500,3 +464,47 @@ INSERT INTO patient_pain (patient_id, case_id, pain_master_id) VALUES
 (10,23,(SELECT id FROM pain_master WHERE category='Back' AND subcategory='Spondylosis' LIMIT 1)),
 (10,24,(SELECT id FROM pain_master WHERE category='Hand' AND subcategory='Arthritis' LIMIT 1)),
 (6,25,(SELECT id FROM pain_master WHERE category='Neck' AND subcategory='Cervical spondylosis' LIMIT 1));
+
+-- =============================================================================
+-- MIGRATION FOR EXISTING DATABASES (run only if you already have the old schema)
+-- Removes: family_history, socio_economic_status, observation section,
+--          ligament_instability. Changes palpation_crepitus to yes/no only.
+-- =============================================================================
+/*
+USE physio_clinic;
+
+ALTER TABLE patients
+    DROP COLUMN IF EXISTS family_history,
+    DROP COLUMN IF EXISTS socio_economic_status,
+    DROP COLUMN IF EXISTS observation_built,
+    DROP COLUMN IF EXISTS observation_attitude_limb,
+    DROP COLUMN IF EXISTS observation_posture,
+    DROP COLUMN IF EXISTS observation_deformity,
+    DROP COLUMN IF EXISTS aids_applications,
+    DROP COLUMN IF EXISTS gait,
+    DROP COLUMN IF EXISTS ligament_instability;
+
+ALTER TABLE patient_cases
+    DROP COLUMN IF EXISTS family_history,
+    DROP COLUMN IF EXISTS socio_economic_status,
+    DROP COLUMN IF EXISTS observation_built,
+    DROP COLUMN IF EXISTS observation_attitude_limb,
+    DROP COLUMN IF EXISTS observation_posture,
+    DROP COLUMN IF EXISTS observation_deformity,
+    DROP COLUMN IF EXISTS aids_applications,
+    DROP COLUMN IF EXISTS gait,
+    DROP COLUMN IF EXISTS ligament_instability;
+
+-- Convert palpation_crepitus from TEXT to ENUM (map existing text to yes/no or NULL)
+ALTER TABLE patients MODIFY palpation_crepitus VARCHAR(10) NULL;
+UPDATE patients SET palpation_crepitus = CASE
+    WHEN palpation_crepitus IS NULL OR TRIM(LOWER(palpation_crepitus)) IN ('','no','none','negative') THEN 'no'
+    ELSE 'yes' END;
+ALTER TABLE patients MODIFY palpation_crepitus ENUM('yes','no') NULL;
+
+ALTER TABLE patient_cases MODIFY palpation_crepitus VARCHAR(10) NULL;
+UPDATE patient_cases SET palpation_crepitus = CASE
+    WHEN palpation_crepitus IS NULL OR TRIM(LOWER(palpation_crepitus)) IN ('','no','none','negative','no crepitus detected') THEN 'no'
+    ELSE 'yes' END;
+ALTER TABLE patient_cases MODIFY palpation_crepitus ENUM('yes','no') NULL;
+*/

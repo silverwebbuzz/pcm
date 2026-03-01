@@ -11,22 +11,18 @@ INSERT INTO users (id, role, name, email, password_hash, security_question, secu
 INSERT INTO patients (
     id, user_id, first_name, last_name, age, gender, dob, occupation, assessment_date, dominance, condition_duration,
     phone, address, emergency_contact, chief_complain, history_present_illness, past_medical_history, surgical_history,
-    family_history, socio_economic_status, observation_built, observation_attitude_limb, observation_posture,
-    observation_deformity, aids_applications, gait, palpation_tenderness, palpation_oedema, palpation_warmth,
-    palpation_crepitus, examination_rom, muscle_power, muscle_bulk, ligament_instability, pain_type, pain_site,
-    pain_nature, pain_aggravating_factor, pain_relieving_factor, pain_measurement, gait_assessment, diagnosis,
-    treatment_goals, created_by
+    palpation_tenderness, palpation_oedema, palpation_warmth, palpation_crepitus, examination_rom, muscle_power, muscle_bulk,
+    pain_type, pain_site, pain_nature, pain_aggravating_factor, pain_relieving_factor, pain_measurement, gait_assessment,
+    diagnosis, treatment_goals, created_by
 ) VALUES
     (
         1, 4, 'John', 'Patient', 32, 'Male', '1993-05-12', 'Software Engineer', '2026-01-25', 'Right', '3 weeks',
         '9990001111', '12 Green St', 'Jane Patient - 9990002222',
         'Low back pain after lifting',
         'Pain began after lifting heavy box; worse with bending.',
-        'No major illnesses', 'None', 'Father with back pain', 'Middle',
-        'Athletic', 'Slight guarding', 'Mild anterior tilt',
-        'No visible deformity', 'Lumbar belt', 'Antalgic gait',
-        'L4-L5 tenderness', 'pitting', 'Mild warmth',
-        'None', 'Lumbar flexion limited to 60 degrees', '4/5', 'Normal', 'Negative',
+        'No major illnesses', 'None',
+        'L4-L5 tenderness', 'pitting', 'Mild warmth', 'no',
+        'Lumbar flexion limited to 60 degrees', '4/5', 'Normal',
         'Mechanical', 'Lower back', 'Dull ache', 'Prolonged sitting', 'Rest and heat', 6,
         'Short stride length', 'Lumbar strain', 'Reduce pain, restore ROM', 1
     ),
@@ -35,11 +31,9 @@ INSERT INTO patients (
         '9990003333', '88 Lake Rd', 'Tom Smith - 9990004444',
         'Knee pain while walking',
         'Gradual onset of knee pain with stairs.',
-        'Hypertension', 'Appendectomy', 'Mother with OA', 'Middle',
-        'Average', 'Normal', 'Upright',
-        'Mild valgus', 'Knee brace', 'Slow gait',
-        'Medial joint line', 'non_pitting', 'Warmth present',
-        'Crepitus felt', 'Knee flexion 0-110', '4+/5', 'Mild quad wasting', 'Mild',
+        'Hypertension', 'Appendectomy',
+        'Medial joint line', 'non_pitting', 'Warmth present', 'yes',
+        'Knee flexion 0-110', '4+/5', 'Mild quad wasting',
         'Degenerative', 'Right knee', 'Aching', 'Stairs', 'Ice and rest', 7,
         'Guarded gait', 'Knee OA', 'Pain relief and strengthen quads', 1
     );

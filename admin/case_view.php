@@ -124,18 +124,6 @@ require __DIR__ . '/../layout/header.php';
         <div class="info-label">Surgical History</div>
         <div><?php echo nl2br(e($case['surgical_history'])); ?></div>
     </div>
-    <div class="section-card soft">
-        <div class="info-label">Family History</div>
-        <div><?php echo nl2br(e($case['family_history'])); ?></div>
-    </div>
-    <div class="section-card soft">
-        <div class="info-label">Socio Economic Status</div>
-        <div><?php echo nl2br(e($case['socio_economic_status'])); ?></div>
-    </div>
-    <div class="section-card soft">
-        <div class="info-label">Observation</div>
-        <div><?php echo nl2br(e(trim($case['observation_built'] . "\n" . $case['observation_attitude_limb'] . "\n" . $case['observation_posture'] . "\n" . $case['observation_deformity']))); ?></div>
-    </div>
 </div>
 
 <div class="section-card section-title">
@@ -144,11 +132,15 @@ require __DIR__ . '/../layout/header.php';
 <div class="card-grid two-col">
     <div class="section-card soft">
         <div class="info-label">Palpation</div>
-        <div><?php echo nl2br(e(trim($case['palpation_tenderness'] . "\n" . $case['palpation_oedema'] . "\n" . $case['palpation_warmth'] . "\n" . $case['palpation_crepitus']))); ?></div>
+        <div><?php
+            $palpParts = array_filter([$case['palpation_tenderness'], $case['palpation_oedema'], $case['palpation_warmth']]);
+            if (!empty($case['palpation_crepitus'])) $palpParts[] = 'Crepitus: ' . (strtolower($case['palpation_crepitus']) === 'yes' ? 'Yes' : 'No');
+            echo nl2br(e(trim(implode("\n", $palpParts))));
+        ?></div>
     </div>
     <div class="section-card soft">
         <div class="info-label">ROM &amp; Muscle</div>
-        <div><?php echo nl2br(e(trim($case['examination_rom'] . "\n" . $case['muscle_power'] . "\n" . $case['muscle_bulk'] . "\n" . $case['ligament_instability']))); ?></div>
+        <div><?php echo nl2br(e(trim($case['examination_rom'] . "\n" . $case['muscle_power'] . "\n" . $case['muscle_bulk']))); ?></div>
     </div>
     <div class="section-card soft">
         <div class="info-label">Gait Assessment</div>

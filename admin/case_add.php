@@ -26,22 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $historyPresent = trim($_POST['history_present_illness'] ?? '');
     $pastMedical = trim($_POST['past_medical_history'] ?? '');
     $surgicalHistory = trim($_POST['surgical_history'] ?? '');
-    $familyHistory = trim($_POST['family_history'] ?? '');
-    $socioEconomic = trim($_POST['socio_economic_status'] ?? '');
-    $observationBuilt = trim($_POST['observation_built'] ?? '');
-    $observationAttitude = trim($_POST['observation_attitude_limb'] ?? '');
-    $observationPosture = trim($_POST['observation_posture'] ?? '');
-    $observationDeformity = trim($_POST['observation_deformity'] ?? '');
-    $aidsApplications = trim($_POST['aids_applications'] ?? '');
-    $gait = trim($_POST['gait'] ?? '');
     $palpationTenderness = trim($_POST['palpation_tenderness'] ?? '');
     $palpationOedema = trim($_POST['palpation_oedema'] ?? '');
     $palpationWarmth = trim($_POST['palpation_warmth'] ?? '');
-    $palpationCrepitus = trim($_POST['palpation_crepitus'] ?? '');
+    $palpationCrepitus = in_array($_POST['palpation_crepitus'] ?? '', ['yes', 'no']) ? $_POST['palpation_crepitus'] : null;
     $examinationRom = trim($_POST['examination_rom'] ?? '');
     $musclePower = trim($_POST['muscle_power'] ?? '');
     $muscleBulk = trim($_POST['muscle_bulk'] ?? '');
-    $ligamentInstability = trim($_POST['ligament_instability'] ?? '');
     $gaitAssessment = trim($_POST['gait_assessment'] ?? '');
     $painType = trim($_POST['pain_type'] ?? '');
     $painSite = trim($_POST['pain_site'] ?? '');
@@ -58,12 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('
                 INSERT INTO patient_cases (
                     patient_id, visit_date, condition_duration, chief_complain, history_present_illness, past_medical_history,
-                    surgical_history, family_history, socio_economic_status, observation_built, observation_attitude_limb,
-                    observation_posture, observation_deformity, aids_applications, gait, palpation_tenderness,
-                    palpation_oedema, palpation_warmth, palpation_crepitus, examination_rom, muscle_power, muscle_bulk,
-                    ligament_instability, pain_type, pain_site, pain_nature, gait_assessment,
+                    surgical_history, palpation_tenderness, palpation_oedema, palpation_warmth, palpation_crepitus,
+                    examination_rom, muscle_power, muscle_bulk, pain_type, pain_site, pain_nature, gait_assessment,
                     pain_aggravating_factor, pain_relieving_factor, pain_measurement, diagnosis, treatment_goals, created_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ');
             $stmt->execute([
                 $patientId,
@@ -73,14 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $historyPresent,
                 $pastMedical,
                 $surgicalHistory,
-                $familyHistory,
-                $socioEconomic,
-                $observationBuilt,
-                $observationAttitude,
-                $observationPosture,
-                $observationDeformity,
-                $aidsApplications,
-                $gait,
                 $palpationTenderness,
                 $palpationOedema,
                 $palpationWarmth,
@@ -88,7 +69,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $examinationRom,
                 $musclePower,
                 $muscleBulk,
-                $ligamentInstability,
                 $painType,
                 $painSite,
                 $painNature,
@@ -196,30 +176,6 @@ $visitDefault = date('Y-m-d\TH:i');
     </div>
 
     <div class="section-card">
-        <div class="section-title"><h3>Observation</h3></div>
-        <div class="grid form-grid">
-            <label>Built of Patient
-                <textarea name="observation_built" rows="2"></textarea>
-            </label>
-            <label>Attitude of Limb
-                <textarea name="observation_attitude_limb" rows="2"></textarea>
-            </label>
-            <label>Posture
-                <textarea name="observation_posture" rows="2"></textarea>
-            </label>
-            <label>Deformity
-                <textarea name="observation_deformity" rows="2"></textarea>
-            </label>
-            <label>Aids &amp; Applications
-                <textarea name="aids_applications" rows="2"></textarea>
-            </label>
-            <label>Gait
-                <textarea name="gait" rows="2"></textarea>
-            </label>
-        </div>
-    </div>
-
-    <div class="section-card">
         <div class="section-title"><h3>On Palpation</h3></div>
         <div class="grid form-grid">
             <label>Tenderness
@@ -236,7 +192,11 @@ $visitDefault = date('Y-m-d\TH:i');
                 <textarea name="palpation_warmth" rows="2"></textarea>
             </label>
             <label>Crepitus
-                <textarea name="palpation_crepitus" rows="2"></textarea>
+                <select name="palpation_crepitus">
+                    <option value="">Select</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
             </label>
         </div>
     </div>
@@ -252,12 +212,6 @@ $visitDefault = date('Y-m-d\TH:i');
             </label>
             <label>Surgical History
                 <textarea name="surgical_history" rows="3"></textarea>
-            </label>
-            <label>Family History
-                <textarea name="family_history" rows="3"></textarea>
-            </label>
-            <label>Socio Economic Status
-                <textarea name="socio_economic_status" rows="2"></textarea>
             </label>
         </div>
     </div>
@@ -300,9 +254,6 @@ $visitDefault = date('Y-m-d\TH:i');
             </label>
             <label>Muscle Bulk
                 <textarea name="muscle_bulk" rows="2"></textarea>
-            </label>
-            <label>Ligament Instability
-                <textarea name="ligament_instability" rows="2"></textarea>
             </label>
         </div>
     </div>
